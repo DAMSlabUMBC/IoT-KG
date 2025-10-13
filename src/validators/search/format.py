@@ -3,6 +3,7 @@ from src.types.triple import Triple
 
 class QueryFormatter:
 
+    # TODO: How can we paraphrase dynamically and not have it hard coded?
     TEMPLATES = {
         ('hasSensor', 'device', 'sensor'): [
             '"{subject} has {object}"',
@@ -12,6 +13,7 @@ class QueryFormatter:
             '"{subject} features {object}"',
         ],
         ('manufacturedBy', 'device', 'manufacturer'): [
+            '"{subject} by {object}"',
             '"{subject} is manufactured by {object}"',
             '"{subject} is produced by {object}"',
             '"{subject} comes from {object}"',

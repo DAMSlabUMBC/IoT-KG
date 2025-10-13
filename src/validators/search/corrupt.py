@@ -24,6 +24,7 @@ class TripleCorruptor:
     def __init__(self, query_formatter: QueryFormatter):
         self.query_formatter = query_formatter
 
+    # TODO: how can we corrupt a triple with "best effort" and not randomly
     def generate_corrupted_queries(self, triple: Triple, max_corruptions=3):
         corrupt_subject = random.random() < 0.5
 
@@ -71,6 +72,7 @@ class TripleCorruptor:
             )
 
     # TODO: move db logic out
+    # TODO: Test to see what happens when we try to findind something that does not exist
     def _top_by_edge(self, edge_col: str, vertex_col: str, direction: str = "INBOUND", limit: int = 3):
         print("RUNNING TOP_BY_EDGE")
         query = f"""
