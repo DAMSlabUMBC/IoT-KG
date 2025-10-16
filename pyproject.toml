@@ -5,9 +5,18 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "crawl4ai>=0.7.4",
+    "ddgs>=9.5.2",
     "dotenv>=0.9.9",
+    "langchain>=0.3.27",
+    "langchain-community>=0.3.31",
+    "langchain-huggingface>=0.3.1",
+    "langchain-ollama>=0.3.10",
+    "langgraph>=0.6.10",
+    "ollama>=0.6.0",
     "playwright>=1.55.0",
     "playwright-stealth>=2.0.0",
     "python-arango>=8.2.2",
+    "sentence-transformers>=5.1.1",
     "tqdm>=4.67.1",
 ]
