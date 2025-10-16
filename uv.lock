@@ -775,6 +775,47 @@ wheels = [
 ]
 
 [[package]]
+name = "iot-kg"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "crawl4ai" },
+    { name = "ddgs" },
+    { name = "dotenv" },
+    { name = "langchain" },
+    { name = "langchain-community" },
+    { name = "langchain-huggingface" },
+    { name = "langchain-ollama" },
+    { name = "langgraph" },
+    { name = "ollama" },
+    { name = "playwright" },
+    { name = "playwright-stealth" },
+    { name = "python-arango" },
+    { name = "sentence-transformers" },
+    { name = "tf-playwright-stealth" },
+    { name = "tqdm" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "crawl4ai", specifier = ">=0.7.4" },
+    { name = "ddgs", specifier = ">=9.5.2" },
+    { name = "dotenv", specifier = ">=0.9.9" },
+    { name = "langchain", specifier = ">=0.3.27" },
+    { name = "langchain-community", specifier = ">=0.3.31" },
+    { name = "langchain-huggingface", specifier = ">=0.3.1" },
+    { name = "langchain-ollama", specifier = ">=0.3.10" },
+    { name = "langgraph", specifier = ">=0.6.10" },
+    { name = "ollama", specifier = ">=0.6.0" },
+    { name = "playwright", specifier = ">=1.55.0" },
+    { name = "playwright-stealth", specifier = ">=2.0.0" },
+    { name = "python-arango", specifier = ">=8.2.2" },
+    { name = "sentence-transformers", specifier = ">=5.1.1" },
+    { name = "tf-playwright-stealth", specifier = ">=1.2.0" },
+    { name = "tqdm", specifier = ">=4.67.1" },
+]
+
+[[package]]
 name = "jinja2"
 version = "3.1.6"
 source = { registry = "https://pypi.org/simple" }
@@ -1082,45 +1123,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/3a/94/6428360df5200921727dc65f4c6612892ed1fbe2b33ddd11dbe308c8c7d5/litellm-1.78.2.tar.gz", hash = "sha256:1b2f741f8d508393ba56ef6f4d4d3f2ab80c341c4d7ebb65b185471411d1a7ea", size = 10773934 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b1/79/e8c57380e8e62bad39924878c4e6d9bee43d595e870533a1fdda20e8b62f/litellm-1.78.2-py3-none-any.whl", hash = "sha256:aba1c396aacaf88e93b317774be991e3932a4f00a963bdeb109069e89edce163", size = 9774515 },
-]
-
-[[package]]
-name = "llm-scraper"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "crawl4ai" },
-    { name = "ddgs" },
-    { name = "dotenv" },
-    { name = "langchain" },
-    { name = "langchain-community" },
-    { name = "langchain-huggingface" },
-    { name = "langchain-ollama" },
-    { name = "langgraph" },
-    { name = "ollama" },
-    { name = "playwright" },
-    { name = "playwright-stealth" },
-    { name = "python-arango" },
-    { name = "sentence-transformers" },
-    { name = "tqdm" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "crawl4ai", specifier = ">=0.7.4" },
-    { name = "ddgs", specifier = ">=9.5.2" },
-    { name = "dotenv", specifier = ">=0.9.9" },
-    { name = "langchain", specifier = ">=0.3.27" },
-    { name = "langchain-community", specifier = ">=0.3.31" },
-    { name = "langchain-huggingface", specifier = ">=0.3.1" },
-    { name = "langchain-ollama", specifier = ">=0.3.10" },
-    { name = "langgraph", specifier = ">=0.6.10" },
-    { name = "ollama", specifier = ">=0.6.0" },
-    { name = "playwright", specifier = ">=1.55.0" },
-    { name = "playwright-stealth", specifier = ">=2.0.0" },
-    { name = "python-arango", specifier = ">=8.2.2" },
-    { name = "sentence-transformers", specifier = ">=5.1.1" },
-    { name = "tqdm", specifier = ">=4.67.1" },
 ]
 
 [[package]]

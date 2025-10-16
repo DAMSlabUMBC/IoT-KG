@@ -1,5 +1,5 @@
 [project]
-name = "llm-scraper"
+name = "IoT-KG"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -18,5 +18,6 @@ dependencies = [
     "playwright-stealth>=2.0.0",
     "python-arango>=8.2.2",
     "sentence-transformers>=5.1.1",
+    "tf-playwright-stealth>=1.2.0",
     "tqdm>=4.67.1",
 ]
