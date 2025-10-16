@@ -12,15 +12,14 @@ Example Command:
 
 import os
 import json
-import asyncio
 import datetime
 import argparse
 
 from src.configs.amazon import AMAZON_SELECTOR
 from src.configs.walmart import WALMART_SELECTOR
 
-from playwright.async_api import async_playwright
-from playwright_stealth import Stealth
+from playwright.sync_api import sync_playwright
+from playwright_stealth import stealth_sync
 
 # TODO: Have this read from a file of urls
 URLS = [
@@ -33,34 +32,35 @@ CONFIGS = {
     "walmart": WALMART_SELECTOR
 }
 
-async def scrape_to_disk(urls: list[str], config: str):
-    async with Stealth().use_async(async_playwright()) as p:
+def scrape_to_disk(urls: list[str], config: str):
+    with sync_playwright() as p:
             browser = None
             try:
-                browser = await p.firefox.launch(headless=False)
-                output_dir = f"src/data/html_dumps/{config}"
+                browser =  p.firefox.launch(headless=False)
+                output_dir = f"data/html_dumps/{config}"
                 os.makedirs(output_dir, exist_ok=True)
 
                 for url in urls:
-                    page = await browser.new_page()
+                    page = browser.new_page()
+                    stealth_sync(page)
                     try:
-                        await page.goto(url, wait_until='domcontentloaded')
-                        await page.wait_for_timeout(5000)
+                        page.goto(url, wait_until='domcontentloaded')
+                        page.wait_for_timeout(5000)
 
                         print(f"Scraping {url} using {config} config")
 
                         result = {"url": url}
                         for key, value in CONFIGS[config].items():
-                            result[key] = await page.locator(value).inner_text()
+                            result[key] = page.locator(value).inner_text()
 
                         with open(f"{output_dir}/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json", "w", encoding="utf-8") as f:
                             f.write(json.dumps(result, indent=2))
                     finally:
-                        await page.close()
+                        page.close()
             except Exception as e:
                 raise Exception("Error scraping to disk: ", e)
             finally:
-                await browser.close()
+                browser.close()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Scrape e-commerce websites')
@@ -76,4 +76,4 @@ if __name__ == '__main__':
     elif args.walmart:
         config = "walmart"
     
-    asyncio.run(scrape_to_disk(URLS, config))
+    scrape_to_disk(URLS, config)

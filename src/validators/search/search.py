@@ -3,7 +3,7 @@ import urllib.parse
 from typing import List
 from src.types.search_result import SearchResult
 from playwright.sync_api import sync_playwright, Page, Browser
-from playwright_stealth import Stealth
+from playwright_stealth import stealth_sync
 
 class SearchClient:
 
@@ -15,7 +15,7 @@ class SearchClient:
     
     def search_queries(self, queries: List[str]) -> List[SearchResult]:
         """Execute multiple search queries and return result counts."""
-        with Stealth().use_sync(sync_playwright()) as p:
+        with sync_playwright() as p:
             browser = p.chromium.launch(headless=self.headless)
             try:
                 return self._search_with_browser(browser, queries)
@@ -25,6 +25,7 @@ class SearchClient:
     def _search_with_browser(self, browser: Browser, queries: List[str]) -> List[SearchResult]:
         """Execute searches using an open browser."""
         page = browser.new_page()
+        stealth_sync(page)
         results = []
         
         for query in queries:
