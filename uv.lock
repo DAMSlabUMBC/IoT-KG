@@ -789,7 +789,6 @@ dependencies = [
     { name = "langgraph" },
     { name = "ollama" },
     { name = "playwright" },
-    { name = "playwright-stealth" },
     { name = "python-arango" },
     { name = "sentence-transformers" },
     { name = "tf-playwright-stealth" },
@@ -808,7 +807,6 @@ requires-dist = [
     { name = "langgraph", specifier = ">=0.6.10" },
     { name = "ollama", specifier = ">=0.6.0" },
     { name = "playwright", specifier = ">=1.55.0" },
-    { name = "playwright-stealth", specifier = ">=2.0.0" },
     { name = "python-arango", specifier = ">=8.2.2" },
     { name = "sentence-transformers", specifier = ">=5.1.1" },
     { name = "tf-playwright-stealth", specifier = ">=1.2.0" },
@@ -1757,18 +1755,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/06/2e/9db64518aebcb3d6ef6cd6d4d01da741aff912c3f0314dadb61226c6a96a/playwright-1.55.0-py3-none-win32.whl", hash = "sha256:29e6d1558ad9d5b5c19cbec0a72f6a2e35e6353cd9f262e22148685b86759f90", size = 35476046 },
     { url = "https://files.pythonhosted.org/packages/46/4f/9ba607fa94bb9cee3d4beb1c7b32c16efbfc9d69d5037fa85d10cafc618b/playwright-1.55.0-py3-none-win_amd64.whl", hash = "sha256:7eb5956473ca1951abb51537e6a0da55257bb2e25fc37c2b75af094a5c93736c", size = 35476048 },
     { url = "https://files.pythonhosted.org/packages/21/98/5ca173c8ec906abde26c28e1ecb34887343fd71cc4136261b90036841323/playwright-1.55.0-py3-none-win_arm64.whl", hash = "sha256:012dc89ccdcbd774cdde8aeee14c08e0dd52ddb9135bf10e9db040527386bd76", size = 31225543 },
-]
-
-[[package]]
-name = "playwright-stealth"
-version = "2.0.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "playwright" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b0/50/e008cc2d9f01e351d69f0bb0f394882c517611eec0ee3d5f8dd8535ce719/playwright_stealth-2.0.0.tar.gz", hash = "sha256:4f44d416d4226689895a4d1cfb40e8d137216c0c9710ea8f84bae2dbf1186fc5", size = 25723 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b9/4e/c37ac19cea166a97de3a9690ad5ba340b3f4f4fcd5bf8237cedb2c2c7076/playwright_stealth-2.0.0-py3-none-any.whl", hash = "sha256:9eb3af1fd21619aac9fdd13a4a08141ed67159ac6310a94f7d2f758ba0cbe179", size = 32466 },
 ]
 
 [[package]]

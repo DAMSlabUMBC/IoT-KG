@@ -15,7 +15,6 @@ dependencies = [
     "langgraph>=0.6.10",
     "ollama>=0.6.0",
     "playwright>=1.55.0",
-    "playwright-stealth>=2.0.0",
     "python-arango>=8.2.2",
     "sentence-transformers>=5.1.1",
     "tf-playwright-stealth>=1.2.0",
