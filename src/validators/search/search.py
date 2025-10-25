@@ -39,9 +39,10 @@ class SearchClient:
         """Execute a single search query and extract result count."""
         
         params = {
-            "q": query,
-            "nfpr": "1",
-            "tbs": "li:1"
+        "q": query,
+        "hl": "en",
+        "gl": "us",
+        "tbs": "li:1,lr:lang_1en"
         }
 
         results = 0
