@@ -2,8 +2,6 @@
 # https://docs.crawl4ai.com/core/crawler-result/#2-html-variants
 # Structured llm output: https://python.langchain.com/docs/how_to/structured_output/
 
-import re
-import json
 from typing import List
 from typing_extensions import Annotated, TypedDict
 
@@ -19,6 +17,7 @@ from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.prompts import ChatPromptTemplate
 
+# TODO: We can move this into types
 class StructuredOutput(TypedDict):
     weight: Annotated[float, 0.0, "The weight of the triple, from 0.0 to 1.0"]
     conclusion: Annotated[str, ..., "The explanation and reasoning for the weight you created"]
