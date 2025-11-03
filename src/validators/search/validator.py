@@ -6,7 +6,7 @@ from .format import QueryFormatter
 from .corrupt import TripleCorruptor
 
 
-class TripleValidator:
+class SearchValidator:
     """Main validator that orchestrates the validation process."""
     
     def __init__(self, headless: bool = False):
@@ -17,7 +17,7 @@ class TripleValidator:
     def validate(
         self, 
         triple: Triple, 
-    ) -> bool:
+    ) -> float:
         """Validate a triple by comparing search results with corrupted variants."""
 
         # Search the triple and paraphrases
