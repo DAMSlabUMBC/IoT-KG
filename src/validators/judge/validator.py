@@ -1,11 +1,11 @@
 # https://medium.com/data-and-beyond/chains-in-langchain-part-1-040624795f91
 
-from typing_extensions import Annotated, TypedDict
+from typing_extensions import Annotated, TypedDict, Dict, List
+from statistics import mean
 
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnableParallel, RunnablePassthrough, RunnableLambda
-from langchain.output_parsers import StructuredOutputParser, ResponseSchema
+from langchain_core.runnables import RunnableParallel
 
 class WeightOutput(TypedDict):
     weight: Annotated[float, 0.0, "The weight of the triple, from 0.0 to 1.0"]
@@ -15,21 +15,34 @@ class JudgeOutput(TypedDict):
     valid: Annotated[bool, False, "The bool representing if the conclsuion and weight is valid or not"]
     conclusion: Annotated[str, ..., "The explanation and reasoning for the bool you provided for the statement regarding the conclusion and weight"]
 
+class RoundReport(TypedDict):
+    proposer: str
+    proposal: WeightOutput
+    judges: Dict[str, JudgeOutput]
+
+class FinalReport(TypedDict):
+    triple: str
+    rounds: List[RoundReport]
+    
 class JudgeValidator:
     def __init__(self):
-        self.llm_gemma = ChatOllama(model="gemma3:4b")
-        self.llm_qwen = ChatOllama(model="qwen3:8b")
-        self.llm_llama = ChatOllama(model="llama3.1:8b")
-        self.llm_mistral = ChatOllama(model="mistral:7b")
+        self.models: Dict[str, ChatOllama] = {
+            "gemma3:4b": ChatOllama(model="gemma3:4b"),
+            "qwen3:8b": ChatOllama(model="qwen3:8b"),
+            "llama3.1:8b": ChatOllama(model="llama3.1:8b"),
+            "mistral:7b": ChatOllama(model="mistral:7b"),
+        }
         
         self.weigh_prompt = PromptTemplate.from_template(
             """
-            Evaluate the truth of the following triple.
-            Assign a confidence weight between 0.0 and 1.0, where:
+            Evaluate how true the following triple is.
+            Assign a truth weight between 0.0 and 1.0, where:
 
-            - 0.0 = absolutely false based on the evidence
-            - 1.0 = absolutely true based on the evidence
-            - Any value in between reflects partial or uncertain support.
+            - 0.0 = completely false
+            - 1.0 = completely true
+            - Values in between reflect partial truth or uncertainty
+
+            This weight must measure the truth of the triple.
 
             Output MUST be a single JSON object and nothing else.
             Do NOT use Markdown, code fences, backticks, comments, the word json, or prose in your final output.
@@ -52,12 +65,15 @@ class JudgeValidator:
 
         self.judge_prompt = PromptTemplate.from_template(
             """
-            Evaluate the truth of the weight and conclusion drawn from the triple:
+            Evaluate whether the weight and conclusion proposed correctly represents how true the triple is.
+
             weight and conclusion: {context}
             triple: {triple}
 
-            Determine whether the weight and consluion provided is valid or not. Explain why.
-             Output MUST be a single JSON object and nothing else.
+            If the triple is false but the weight is high, mark it invalid.
+            If the triple is true but the weight is low, mark it invalid.
+
+            Output MUST be a single JSON object and nothing else.
             Do NOT use Markdown, code fences, backticks, comments, the word json, or prose in your final output.
             The FIRST character of your reply must be "{{" and the LAST must be "}}".
             If evidence is insufficient, set "valid" to false and explain briefly in "conclusion".
@@ -66,7 +82,7 @@ class JudgeValidator:
             Example Output:
 
             {{
-                "conclusion": "<brief reasoning>",
+                "conclusion": "<brief reasoning for determining valid or invalid>",
                 "valid": "<true or false, is the weight and conclusion accurate to the triple ">
             }}
 
@@ -74,39 +90,39 @@ class JudgeValidator:
             """
         )
     
-    def _build_sequence_chain():
-        print("build")
-
-    def parallel_chain():
-        print("parallel")
-    
-    def sequence_chain(self):
-
-        triple = "(('device','EchoDot'),'manufacturedBy',('manufacturer','Google'))"
-
+    def _propose(self, triple: str, model_name: str) -> WeightOutput:
         prompt = self.weigh_prompt.format(triple=triple)
-        structured_llm = self.llm_gemma.with_structured_output(WeightOutput, method="json_schema")
-        result = structured_llm.invoke(prompt)
+        structured_llm = self.models[model_name].with_structured_output(WeightOutput, method="json_schema")
+        return structured_llm.invoke(prompt)
 
-        prompt1 = self.judge_prompt.format(context=result, triple=triple)
-        structured_llm1 = self.llm_llama.with_structured_output(JudgeOutput, method="json_schema")
-        result1 = structured_llm1.invoke(prompt1)
+    def _judge(self, triple: str, context: WeightOutput, model_name: str) -> JudgeOutput:
+        prompt = self.judge_prompt.format(context=context, triple=triple)
+        structured_llm = self.models[model_name].with_structured_output(JudgeOutput, method="json_schema")
+        return structured_llm.invoke(prompt)
+    
+    def _parallel_judgments(self, triple: str, context: WeightOutput, judge_names: List[str]) -> Dict[str, JudgeOutput]:
+        chains = {}
 
-        prompt2 = self.judge_prompt.format(context=result, triple=triple)
-        structured_llm2 = self.llm_mistral.with_structured_output(JudgeOutput, method="json_schema")
-        result2 = structured_llm2.invoke(prompt2)
+        for name in judge_names:
+            chains[name] = self.judge_prompt | self.models[name].with_structured_output(JudgeOutput, method="json_schema")
+        
+        parallel = RunnableParallel(chains)
+        results: Dict[str, JudgeOutput] = parallel.invoke({"context": context, "triple": triple})
 
-        prompt3 = self.judge_prompt.format(context=result, triple=triple)
-        structured_llm3 = self.llm_qwen.with_structured_output(JudgeOutput, method="json_schema")
-        result3 = structured_llm3.invoke(prompt3)
+        return results
+    
+    def evaluate(self, triple: str) -> FinalReport:
+        model_names = list(self.models.keys())
+        rounds: List[RoundReport] = []
 
-        prompt4 = self.judge_prompt.format(context=result, triple=triple)
-        structured_llm4 = self.llm_gemma.with_structured_output(JudgeOutput, method="json_schema")
-        result4 = structured_llm4.invoke(prompt4)
-
-        print(result)
-        print(result4)
-        print(result1)
-        print(result2)
-        print(result3)
-
+        for proposer in model_names:
+            proposal = self._propose(triple, proposer)
+            judgments = self._parallel_judgments(triple, proposal, model_names)
+            rounds.append(
+                RoundReport(
+                    proposer=proposer,
+                    proposal=proposal,
+                    judges=judgments,
+                )
+            )
+        return FinalReport(triple=triple, rounds=rounds)
