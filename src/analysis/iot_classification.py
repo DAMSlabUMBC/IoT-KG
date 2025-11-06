@@ -43,8 +43,6 @@ class IoTClassification:
         )
     
     def classify(self, product_name):
-        print("Classify product name", product_name)
         prompt = self.prompt.format(product_name=product_name)
         response = self.llm.invoke(prompt)
-        print("Classify response: ", response.content)
         return response.content
