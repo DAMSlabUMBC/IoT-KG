@@ -19,7 +19,7 @@ from langchain_core.prompts import PromptTemplate
 
 # TODO: We can move this into types
 class StructuredOutput(TypedDict):
-    truthfulness: Annotated[bool, 0.0, "The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence"]
+    truthfulness: Annotated[bool, ..., "The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence"]
     confidence: Annotated[str, ..., "Your level of certainty based on the strength and consistency of the evidence"]
     reasoning: Annotated[str, ..., "Concise explanation of why the triple is true or false, including factual evidence"]
     sources: Annotated[str, ..., "List of URLs or references used to support your conclusion"]

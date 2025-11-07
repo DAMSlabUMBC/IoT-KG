@@ -1,23 +1,22 @@
 # https://medium.com/data-and-beyond/chains-in-langchain-part-1-040624795f91
 
 from typing_extensions import Annotated, TypedDict, Dict, List
-from statistics import mean
 
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableParallel
 
-class WeightOutput(TypedDict):
-    weight: Annotated[float, 0.0, "The weight of the triple, from 0.0 to 1.0"]
-    conclusion: Annotated[str, ..., "The explanation and reasoning for the weight you created"]
+class ProposeOutput(TypedDict):
+    truthfulness: Annotated[bool, ..., "The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence"]
 
 class JudgeOutput(TypedDict):
-    valid: Annotated[bool, False, "The bool representing if the conclsuion and weight is valid or not"]
-    conclusion: Annotated[str, ..., "The explanation and reasoning for the bool you provided for the statement regarding the conclusion and weight"]
+    truthfulness: Annotated[bool, ..., "The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence"]
+    confidence: Annotated[str, ..., "Your level of certainty based on the strength and consistency of the evidence"]
+    reasoning: Annotated[str, ..., "Concise explanation of why the triple is true or false, including factual evidence"]
 
 class RoundReport(TypedDict):
     proposer: str
-    proposal: WeightOutput
+    proposal: ProposeOutput
     judges: Dict[str, JudgeOutput]
 
 class FinalReport(TypedDict):
@@ -33,28 +32,26 @@ class JudgeValidator:
             "mistral:7b": ChatOllama(model="mistral:7b"),
         }
         
-        self.weigh_prompt = PromptTemplate.from_template(
+        self.propose_prompt = PromptTemplate.from_template(
             """
-            Evaluate how true the following triple is.
-            Assign a truth weight between 0.0 and 1.0, where:
+            You are a Knowledge Graph Engineer specialized in evaluating the truthfulness of a triple.
+            The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence.
 
-            - 0.0 = completely false
-            - 1.0 = completely true
-            - Values in between reflect partial truth or uncertainty
+            Your task is to determine whether the given triple is true or not.
 
-            This weight must measure the truth of the triple.
-
-            Output MUST be a single JSON object and nothing else.
-            Do NOT use Markdown, code fences, backticks, comments, the word json, or prose in your final output.
-            The FIRST character of your reply must be "{{" and the LAST must be "}}".
-            If evidence is insufficient, set "weight" to 0.0 and explain briefly in "conclusion".
-            The output should include a conclusion and weight.
-
-            Example Output:
+            You must provide your response strictly in the following JSON format:
 
             {{
-                "conclusion": "<brief reasoning>",
-                "weight": <value between 0.0 and 1.0>,
+                "truthfulness": true | false,
+            }}
+
+            Example:
+            Input: (('device','EchoDot'),'manufacturedBy',('manufacturer','Amazon'))
+
+            Output:
+            {{
+                "truthfulness": true,
+
             }}
 
             Triple: {triple}
@@ -65,42 +62,60 @@ class JudgeValidator:
 
         self.judge_prompt = PromptTemplate.from_template(
             """
-            Evaluate whether the weight and conclusion proposed correctly represents how true the triple is.
 
-            weight and conclusion: {context}
-            triple: {triple}
+            You are a Knowledge Graph Engineer specialized in evaluating the truthfulness of a triple.
+            The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence.
 
-            If the triple is false but the weight is high, mark it invalid.
-            If the triple is true but the weight is low, mark it invalid.
+            Your task is to determine whether your peer evaluated the triple correctly.
+            You are given the original triple and your peers answer.
 
-            Output MUST be a single JSON object and nothing else.
-            Do NOT use Markdown, code fences, backticks, comments, the word json, or prose in your final output.
-            The FIRST character of your reply must be "{{" and the LAST must be "}}".
-            If evidence is insufficient, set "valid" to false and explain briefly in "conclusion".
-            The output should include a conclusion and valid.
-
-            Example Output:
+            You must provide your response strictly in the following JSON format:
 
             {{
-                "conclusion": "<brief reasoning for determining valid or invalid>",
-                "valid": "<true or false, is the weight and conclusion accurate to the triple ">
+                "truthfulness": true | false,
+                "confidence": "Low Confidence" | "Medium Confidence" | "High Confidence",
+                "reasoning": "Concise explanation of why the triple is true or false, including factual evidence.",
             }}
+
+            Definitions:
+            - Truthfulness: Whether the triple aligns with factual, verifiable information.
+            - Confidence: Your level of certainty based on the strength and consistency of the evidence.
+
+            Example:
+            Input: 
+            Triple: (('device','EchoDot'),'manufacturedBy',('manufacturer','Amazon'))
+            Peer truthfulness answer: false
+
+            Output:
+            {{
+                "truthfulness": true,
+                "confidence": "High Confidence",
+                "reasoning": "The Echo Dot product listings and manufacturer pages confirm Amazon as the manufacturer.",
+                "sources": [
+                    "https://www.amazon.com/echo-dot/s?k=echo+dot",
+                    "https://www.dell.com/en-us/shop/amazon-echo-dot-5th-generation-bluetooth-smart-speaker-alexa-supported-charcoal/apd/ac313554/home-automation"
+                ]
+            }}
+
+            Triple: {triple}
+
+            Peer Truthfulness answer: {context}
 
             Answer:
             """
         )
     
-    def _propose(self, triple: str, model_name: str) -> WeightOutput:
+    def _propose(self, triple: str, model_name: str) -> ProposeOutput:
         prompt = self.weigh_prompt.format(triple=triple)
-        structured_llm = self.models[model_name].with_structured_output(WeightOutput, method="json_schema")
+        structured_llm = self.models[model_name].with_structured_output(ProposeOutput, method="json_schema")
         return structured_llm.invoke(prompt)
 
-    def _judge(self, triple: str, context: WeightOutput, model_name: str) -> JudgeOutput:
+    def _judge(self, triple: str, context: ProposeOutput, model_name: str) -> JudgeOutput:
         prompt = self.judge_prompt.format(context=context, triple=triple)
         structured_llm = self.models[model_name].with_structured_output(JudgeOutput, method="json_schema")
         return structured_llm.invoke(prompt)
     
-    def _parallel_judgments(self, triple: str, context: WeightOutput, judge_names: List[str]) -> Dict[str, JudgeOutput]:
+    def _parallel_judgments(self, triple: str, context: ProposeOutput, judge_names: List[str]) -> Dict[str, JudgeOutput]:
         chains = {}
 
         for name in judge_names:
