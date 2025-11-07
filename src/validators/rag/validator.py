@@ -15,13 +15,14 @@ from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_core.documents import Document
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 # TODO: We can move this into types
 class StructuredOutput(TypedDict):
-    weight: Annotated[float, 0.0, "The weight of the triple, from 0.0 to 1.0"]
-    conclusion: Annotated[str, ..., "The explanation and reasoning for the weight you created"]
-    sources: Annotated[str, ..., "specific URLs from the provided context that support your conclusion"]
+    truthfulness: Annotated[bool, ..., "The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence"]
+    confidence: Annotated[str, ..., "Your level of certainty based on the strength and consistency of the evidence"]
+    reasoning: Annotated[str, ..., "Concise explanation of why the triple is true or false, including factual evidence"]
+    sources: Annotated[str, ..., "List of URLs or references used to support your conclusion"]
 class RAGValidator:
 
     def __init__(self):
@@ -35,33 +36,37 @@ class RAGValidator:
         )
         self.browser_config = BrowserConfig()
         self.run_config = CrawlerRunConfig()
-        self.prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are a fact-checking assistant."),
-            ("human", 
+        self.prompt = PromptTemplate.from_template(
             """
-            Use the provided context to evaluate the truth of the following triple.
-            Assign a confidence weight between 0.0 and 1.0, where:
+            You are a Knowledge Graph Engineer specialized in evaluating the truthfulness of a triple.
+            The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence.
 
-            - 0.0 = absolutely false based on the evidence
-            - 1.0 = absolutely true based on the evidence
-            - Any value in between reflects partial or uncertain support.
+            Your task is to determine whether the given triple is true or not.
 
-            If the context does not provide enough information to make a judgment,
-            output a weight of 0.0 and explain that there is insufficient evidence.
-
-            Output MUST be a single JSON object and nothing else.
-            Do NOT use Markdown, code fences, backticks, comments, the word json, or prose in your final output.
-            The FIRST character of your reply must be "{{" and the LAST must be "}}".
-            If evidence is insufficient, set "weight" to 0.0 and explain briefly in "conclusion".
-            The output should include a conclusion, weight, and sources.
-
-            Example Output:
+            You must provide your response strictly in the following JSON format:
 
             {{
-                "conclusion": "<brief reasoning>",
-                "weight": <value between 0.0 and 1.0>,
+                "truthfulness": true | false,
+                "confidence": "Low Confidence" | "Medium Confidence" | "High Confidence",
+                "reasoning": "Concise explanation of why the triple is true or false, including factual evidence.",
+                "sources": ["List of URLs or references used to support your conclusion"]
+            }}
+
+            Definitions:
+            - Truthfulness: Whether the triple aligns with factual, verifiable information.
+            - Confidence: Your level of certainty based on the strength and consistency of the evidence.
+
+            Example:
+            Input: (('device','EchoDot'),'manufacturedBy',('manufacturer','Amazon'))
+
+            Output:
+            {{
+                "truthfulness": true,
+                "confidence": "High Confidence",
+                "reasoning": "The Echo Dot product listings and manufacturer pages confirm Amazon as the manufacturer.",
                 "sources": [
-                    "<specific URLs, titles, or identifiers from the provided context that support your conclusion>"
+                    "https://www.amazon.com/echo-dot/s?k=echo+dot",
+                    "https://www.dell.com/en-us/shop/amazon-echo-dot-5th-generation-bluetooth-smart-speaker-alexa-supported-charcoal/apd/ac313554/home-automation"
                 ]
             }}
 
@@ -70,8 +75,8 @@ class RAGValidator:
             Context: {context}
 
             Answer:
-            """)
-        ]) # TODO: Make this prompt cleaner since we have typed json output now
+            """
+        )
 
     def validate(self, triple: str) -> float:
         """Validate a triple by comparing query to triple search results"""
@@ -79,20 +84,16 @@ class RAGValidator:
         urls = self._search_urls(triple)
         docs = asyncio.run(self._scrape(urls))
 
-        # TODO: We can write a fast fail for zero docs, but the return should not be an int but rather a StructuredOutput
-        # if not docs:
-        #     return 0
-
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         all_splits = text_splitter.split_documents(docs)
         vector_store = InMemoryVectorStore(self.embeddings)
         vector_store.add_documents(all_splits)
 
         retrieved_docs = vector_store.similarity_search(triple)
-        context_text =  "\n\n".join(doc.page_content for doc in retrieved_docs)
-        messages = self.prompt.invoke({"triple": triple, "context": context_text})
+        context =  "\n\n".join(doc.page_content for doc in retrieved_docs)
+        prompt = self.prompt.format(triple=triple, context=context)
         structured_llm = self.llm.with_structured_output(StructuredOutput, method="json_schema")
-        response = structured_llm.invoke(messages)
+        response = structured_llm.invoke(prompt)
 
         print("Response: ", response)
         return response

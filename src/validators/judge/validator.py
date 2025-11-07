@@ -1,47 +1,57 @@
 # https://medium.com/data-and-beyond/chains-in-langchain-part-1-040624795f91
 
-from typing_extensions import Annotated, TypedDict
+from typing_extensions import Annotated, TypedDict, Dict, List
 
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnableParallel, RunnablePassthrough, RunnableLambda
-from langchain.output_parsers import StructuredOutputParser, ResponseSchema
+from langchain_core.runnables import RunnableParallel
 
-class WeightOutput(TypedDict):
-    weight: Annotated[float, 0.0, "The weight of the triple, from 0.0 to 1.0"]
-    conclusion: Annotated[str, ..., "The explanation and reasoning for the weight you created"]
+class ProposeOutput(TypedDict):
+    truthfulness: Annotated[bool, ..., "The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence"]
 
 class JudgeOutput(TypedDict):
-    valid: Annotated[bool, False, "The bool representing if the conclsuion and weight is valid or not"]
-    conclusion: Annotated[str, ..., "The explanation and reasoning for the bool you provided for the statement regarding the conclusion and weight"]
+    truthfulness: Annotated[bool, ..., "The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence"]
+    confidence: Annotated[str, ..., "Your level of certainty based on the strength and consistency of the evidence"]
+    reasoning: Annotated[str, ..., "Concise explanation of why the triple is true or false, including factual evidence"]
 
+class RoundReport(TypedDict):
+    proposer: str
+    proposal: ProposeOutput
+    judges: Dict[str, JudgeOutput]
+
+class FinalReport(TypedDict):
+    triple: str
+    rounds: List[RoundReport]
+    
 class JudgeValidator:
     def __init__(self):
-        self.llm_gemma = ChatOllama(model="gemma3:4b")
-        self.llm_qwen = ChatOllama(model="qwen3:8b")
-        self.llm_llama = ChatOllama(model="llama3.1:8b")
-        self.llm_mistral = ChatOllama(model="mistral:7b")
+        self.models: Dict[str, ChatOllama] = {
+            "gemma3:4b": ChatOllama(model="gemma3:4b"),
+            "qwen3:8b": ChatOllama(model="qwen3:8b"),
+            "llama3.1:8b": ChatOllama(model="llama3.1:8b"),
+            "mistral:7b": ChatOllama(model="mistral:7b"),
+        }
         
-        self.weigh_prompt = PromptTemplate.from_template(
+        self.propose_prompt = PromptTemplate.from_template(
             """
-            Evaluate the truth of the following triple.
-            Assign a confidence weight between 0.0 and 1.0, where:
+            You are a Knowledge Graph Engineer specialized in evaluating the truthfulness of a triple.
+            The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence.
 
-            - 0.0 = absolutely false based on the evidence
-            - 1.0 = absolutely true based on the evidence
-            - Any value in between reflects partial or uncertain support.
+            Your task is to determine whether the given triple is true or not.
 
-            Output MUST be a single JSON object and nothing else.
-            Do NOT use Markdown, code fences, backticks, comments, the word json, or prose in your final output.
-            The FIRST character of your reply must be "{{" and the LAST must be "}}".
-            If evidence is insufficient, set "weight" to 0.0 and explain briefly in "conclusion".
-            The output should include a conclusion and weight.
-
-            Example Output:
+            You must provide your response strictly in the following JSON format:
 
             {{
-                "conclusion": "<brief reasoning>",
-                "weight": <value between 0.0 and 1.0>,
+                "truthfulness": true | false,
+            }}
+
+            Example:
+            Input: (('device','EchoDot'),'manufacturedBy',('manufacturer','Amazon'))
+
+            Output:
+            {{
+                "truthfulness": true,
+
             }}
 
             Triple: {triple}
@@ -52,61 +62,82 @@ class JudgeValidator:
 
         self.judge_prompt = PromptTemplate.from_template(
             """
-            Evaluate the truth of the weight and conclusion drawn from the triple:
-            weight and conclusion: {context}
-            triple: {triple}
 
-            Determine whether the weight and consluion provided is valid or not. Explain why.
-             Output MUST be a single JSON object and nothing else.
-            Do NOT use Markdown, code fences, backticks, comments, the word json, or prose in your final output.
-            The FIRST character of your reply must be "{{" and the LAST must be "}}".
-            If evidence is insufficient, set "valid" to false and explain briefly in "conclusion".
-            The output should include a conclusion and valid.
+            You are a Knowledge Graph Engineer specialized in evaluating the truthfulness of a triple.
+            The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence.
 
-            Example Output:
+            Your task is to determine whether your peer evaluated the triple correctly.
+            You are given the original triple and your peers answer.
+
+            You must provide your response strictly in the following JSON format:
 
             {{
-                "conclusion": "<brief reasoning>",
-                "valid": "<true or false, is the weight and conclusion accurate to the triple ">
+                "truthfulness": true | false,
+                "confidence": "Low Confidence" | "Medium Confidence" | "High Confidence",
+                "reasoning": "Concise explanation of why the triple is true or false, including factual evidence.",
             }}
+
+            Definitions:
+            - Truthfulness: Whether the triple aligns with factual, verifiable information.
+            - Confidence: Your level of certainty based on the strength and consistency of the evidence.
+
+            Example:
+            Input: 
+            Triple: (('device','EchoDot'),'manufacturedBy',('manufacturer','Amazon'))
+            Peer truthfulness answer: false
+
+            Output:
+            {{
+                "truthfulness": true,
+                "confidence": "High Confidence",
+                "reasoning": "The Echo Dot product listings and manufacturer pages confirm Amazon as the manufacturer.",
+                "sources": [
+                    "https://www.amazon.com/echo-dot/s?k=echo+dot",
+                    "https://www.dell.com/en-us/shop/amazon-echo-dot-5th-generation-bluetooth-smart-speaker-alexa-supported-charcoal/apd/ac313554/home-automation"
+                ]
+            }}
+
+            Triple: {triple}
+
+            Peer Truthfulness answer: {context}
 
             Answer:
             """
         )
     
-    def _build_sequence_chain():
-        print("build")
-
-    def parallel_chain():
-        print("parallel")
-    
-    def sequence_chain(self):
-
-        triple = "(('device','EchoDot'),'manufacturedBy',('manufacturer','Google'))"
-
+    def _propose(self, triple: str, model_name: str) -> ProposeOutput:
         prompt = self.weigh_prompt.format(triple=triple)
-        structured_llm = self.llm_gemma.with_structured_output(WeightOutput, method="json_schema")
-        result = structured_llm.invoke(prompt)
+        structured_llm = self.models[model_name].with_structured_output(ProposeOutput, method="json_schema")
+        return structured_llm.invoke(prompt)
 
-        prompt1 = self.judge_prompt.format(context=result, triple=triple)
-        structured_llm1 = self.llm_llama.with_structured_output(JudgeOutput, method="json_schema")
-        result1 = structured_llm1.invoke(prompt1)
+    def _judge(self, triple: str, context: ProposeOutput, model_name: str) -> JudgeOutput:
+        prompt = self.judge_prompt.format(context=context, triple=triple)
+        structured_llm = self.models[model_name].with_structured_output(JudgeOutput, method="json_schema")
+        return structured_llm.invoke(prompt)
+    
+    def _parallel_judgments(self, triple: str, context: ProposeOutput, judge_names: List[str]) -> Dict[str, JudgeOutput]:
+        chains = {}
 
-        prompt2 = self.judge_prompt.format(context=result, triple=triple)
-        structured_llm2 = self.llm_mistral.with_structured_output(JudgeOutput, method="json_schema")
-        result2 = structured_llm2.invoke(prompt2)
+        for name in judge_names:
+            chains[name] = self.judge_prompt | self.models[name].with_structured_output(JudgeOutput, method="json_schema")
+        
+        parallel = RunnableParallel(chains)
+        results: Dict[str, JudgeOutput] = parallel.invoke({"context": context, "triple": triple})
 
-        prompt3 = self.judge_prompt.format(context=result, triple=triple)
-        structured_llm3 = self.llm_qwen.with_structured_output(JudgeOutput, method="json_schema")
-        result3 = structured_llm3.invoke(prompt3)
+        return results
+    
+    def evaluate(self, triple: str) -> FinalReport:
+        model_names = list(self.models.keys())
+        rounds: List[RoundReport] = []
 
-        prompt4 = self.judge_prompt.format(context=result, triple=triple)
-        structured_llm4 = self.llm_gemma.with_structured_output(JudgeOutput, method="json_schema")
-        result4 = structured_llm4.invoke(prompt4)
-
-        print(result)
-        print(result4)
-        print(result1)
-        print(result2)
-        print(result3)
-
+        for proposer in model_names:
+            proposal = self._propose(triple, proposer)
+            judgments = self._parallel_judgments(triple, proposal, model_names)
+            rounds.append(
+                RoundReport(
+                    proposer=proposer,
+                    proposal=proposal,
+                    judges=judgments,
+                )
+            )
+        return FinalReport(triple=triple, rounds=rounds)
