@@ -17,5 +17,5 @@ AMAZON_PRODUCT_URL_SELECTOR = {
       "name": "Search Amazon",
     },
     "product_urls":  'a[href*="/dp/"]:not([href*="/sspa/"]):not([href*="/slredirect/"])',
-    "next_button": ""
+    "next_button": 'a[aria-label*="next page"]'
 }

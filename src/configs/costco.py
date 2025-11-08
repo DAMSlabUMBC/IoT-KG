@@ -5,5 +5,5 @@ COSTCO_PRODUCT_URL_SELECTOR = {
       "name": "Search Costco",
     },
     "product_urls":  'a[href*=".product."]',
-    "next_button": ""
+    "next_button": 'a[aria-label="Go to next page"]'
 }

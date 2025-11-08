@@ -5,5 +5,5 @@ BEST_BUY_PRODUCT_URL_SELECTOR = {
       "name": "Search",
     },
     "product_urls":  'a.product-list-item-link',
-    "next_button": ""
+    "next_button": 'a[aria-label="Next page"]'
 }

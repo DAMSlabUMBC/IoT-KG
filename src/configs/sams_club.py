@@ -5,5 +5,5 @@ SAMS_CLUB_PRODUCT_URL_SELECTOR = {
       "name": "Search",
     },
     "product_urls":  'a[href*="/ip/"]',
-    "next_button": ""
+    "next_button": 'a[aria-label="Next Page"]'
 }

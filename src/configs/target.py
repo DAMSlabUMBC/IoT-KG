@@ -5,5 +5,5 @@ TARGET_PRODUCT_URL_SELECTOR = {
       "name": "What can we help you find? suggestions appear below",
     },
     "product_urls":  'a[href*="/p/"]',
-    "next_button": ""
+    "next_button": 'button[aria-label="next page"]'
 }
