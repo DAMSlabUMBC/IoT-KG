@@ -2,12 +2,10 @@
 Scrape each URL in urls using selectors from the chosen config and
 write extracted fields to JSON files on disk for downstream LLM use.
 
-Args:
-    urls(list[str]): List of URLs to scrape
-    config(str): Name of the config to use
-
 Example Command:
   uv run -m src.scraper.scrape_to_disk --amazon
+
+Configs are located in src.configs
 """
 
 import os

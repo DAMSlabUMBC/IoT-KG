@@ -7,12 +7,13 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableParallel
 
 class ProposeOutput(TypedDict):
-    truthfulness: Annotated[bool, ..., "The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence"]
+    truthfulness: Annotated[bool, ..., "True if the triple is factually accurate; False otherwise."]
+    confidence: Annotated[str, ..., "Your certainty calibrated to the strength and consistency of the evidence (Low Confidence | Medium Confidence | High Confidence)."]
+    reasoning: Annotated[str, ..., "Concise explanation of why the triple is true or false,  referencing evidence where possible."]
 
 class JudgeOutput(TypedDict):
-    truthfulness: Annotated[bool, ..., "The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence"]
-    confidence: Annotated[str, ..., "Your level of certainty based on the strength and consistency of the evidence"]
-    reasoning: Annotated[str, ..., "Concise explanation of why the triple is true or false, including factual evidence"]
+    agree_with_truthfulness: Annotated[bool, ..., "Whether the you agree with the proposed truthfulness label."]
+    critique: Annotated[str, ..., "Concise justification for agreeing or disagreeing, referencing evidence where possible. Do not re-answer the triple."]
 
 class RoundReport(TypedDict):
     proposer: str
@@ -43,6 +44,8 @@ class JudgeValidator:
 
             {{
                 "truthfulness": true | false,
+                "confidence": "Low Confidence" | "Medium Confidence" | "High Confidence",
+                "reasoning": "Concise and brief explanation of why the triple is true or false, including factual evidence.",
             }}
 
             Example:
@@ -51,7 +54,8 @@ class JudgeValidator:
             Output:
             {{
                 "truthfulness": true,
-
+                "confidence": "High Confidence",
+                "reasoning": "The Echo Dot product listings and manufacturer pages confirm Amazon as the manufacturer.",
             }}
 
             Triple: {triple}
@@ -62,51 +66,47 @@ class JudgeValidator:
 
         self.judge_prompt = PromptTemplate.from_template(
             """
+            You are a Knowledge Graph Engineer specialized in evaluating the trufulness of a triple and
+            tasked with STRICTLY judging the proposed answer by your peer. DO not re-answer or re-evaluate the triple.
+            Evaluate ONLY whether the propser's label and reasoning are true to the triple.
 
-            You are a Knowledge Graph Engineer specialized in evaluating the truthfulness of a triple.
             The truthfulness of a triple is determined by its factual accuracy, supported by reliable data or external evidence.
 
-            Your task is to determine whether your peer evaluated the triple correctly.
             You are given the original triple and your peers answer.
 
-            You must provide your response strictly in the following JSON format:
-
-            {{
-                "truthfulness": true | false,
-                "confidence": "Low Confidence" | "Medium Confidence" | "High Confidence",
-                "reasoning": "Concise explanation of why the triple is true or false, including factual evidence.",
-            }}
-
-            Definitions:
-            - Truthfulness: Whether the triple aligns with factual, verifiable information.
-            - Confidence: Your level of certainty based on the strength and consistency of the evidence.
+            Rules:
+            - Keep reasoning to 1-5 sentences, no repetition.
+            - Each sentence must add new information.
+            - Do not restate the same claim with different wording.
 
             Example:
+
             Input: 
             Triple: (('device','EchoDot'),'manufacturedBy',('manufacturer','Amazon'))
-            Peer truthfulness answer: false
 
-            Output:
+            Proposed Answer:
             {{
                 "truthfulness": true,
                 "confidence": "High Confidence",
                 "reasoning": "The Echo Dot product listings and manufacturer pages confirm Amazon as the manufacturer.",
-                "sources": [
-                    "https://www.amazon.com/echo-dot/s?k=echo+dot",
-                    "https://www.dell.com/en-us/shop/amazon-echo-dot-5th-generation-bluetooth-smart-speaker-alexa-supported-charcoal/apd/ac313554/home-automation"
-                ]
+            }}
+
+            Output:
+            {{
+                "agree_with_truthfulness": true,
+                "critique": "The following label is true because the Echo Dot prodcutr listings and manufacturer pages confirm Amazon as the manufacturer.",
             }}
 
             Triple: {triple}
 
-            Peer Truthfulness answer: {context}
+            Peer Proposed Answer: {context}
 
             Answer:
             """
         )
     
     def _propose(self, triple: str, model_name: str) -> ProposeOutput:
-        prompt = self.weigh_prompt.format(triple=triple)
+        prompt = self.propose_prompt.format(triple=triple)
         structured_llm = self.models[model_name].with_structured_output(ProposeOutput, method="json_schema")
         return structured_llm.invoke(prompt)
 
