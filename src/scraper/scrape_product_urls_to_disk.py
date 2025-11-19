@@ -43,6 +43,9 @@ def click_next(page, selector):
         if next_button.count() == 0:
             return False
 
+        if not next_button.first.is_visible():
+            return False
+
         next_button.click()
 
         page.wait_for_timeout(7000)

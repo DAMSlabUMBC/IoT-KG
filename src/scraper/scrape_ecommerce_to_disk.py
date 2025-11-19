@@ -13,11 +13,10 @@ import json
 import datetime
 import argparse
 
-from src.configs.amazon import AMAZON_SELECTOR
-from src.configs.walmart import WALMART_SELECTOR
-
 from playwright.sync_api import sync_playwright
 from playwright_stealth import stealth_sync
+
+from src.configs import AMAZON_SELECTOR, BEST_BUY_SELECTOR, COSTCO_SELECTOR, TARGET_SELECTOR, WALMART_SELECTOR
 
 # TODO: Have this read from a file of urls
 URLS = [
@@ -27,7 +26,10 @@ URLS = [
 
 CONFIGS = {
     "amazon": AMAZON_SELECTOR,
-    "walmart": WALMART_SELECTOR
+    "best_buy": BEST_BUY_SELECTOR,
+    "costco": COSTCO_SELECTOR,
+    "target": TARGET_SELECTOR,
+    "walmart": WALMART_SELECTOR,
 }
 
 def scrape_to_disk(urls: list[str], config: str):
@@ -65,12 +67,21 @@ if __name__ == '__main__':
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--amazon', action='store_true', help='Use Amazon config')
+    group.add_argument('--best_buy', action='store_true', help='Use Best Buy config')
+    group.add_argument('--costco', action='store_true', help='Use Costco config')
+    group.add_argument('--target', action='store_true', help='Use Target config')
     group.add_argument('--walmart', action='store_true', help='Use Walmart config')
 
     args = parser.parse_args()
     
     if args.amazon:
         config = "amazon"
+    elif args.best_buy:
+        config = "best_buy"
+    elif args.costco:
+        args = "costco"
+    elif args.target:
+        args = "target"
     elif args.walmart:
         config = "walmart"
     
