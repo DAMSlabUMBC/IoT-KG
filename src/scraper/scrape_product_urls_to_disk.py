@@ -4,10 +4,11 @@ from urllib.parse import urljoin
 
 from src.configs import *
 from playwright.sync_api import sync_playwright
+from src.helpers.snake_case import to_snake_case
 
 # CONFIGS = {
-#     "amazon": AMAZON_PRODUCT_URL_SELECTOR, ✅
-#     "best_buy": BEST_BUY_PRODUCT_URL_SELECTOR,✅
+#     "amazon": AMAZON_PRODUCT_URL_SELECTOR, 
+#     "best_buy": BEST_BUY_PRODUCT_URL_SELECTOR,
 #     "costco": COSTCO_PRODUCT_URL_SELECTOR,
 #     "home_depot": HOME_DEPOT_PRODUCT_URL_SELECTOR,
 #     "sams_club": SAMS_CLUB_PRODUCT_URL_SELECTOR,
@@ -15,15 +16,8 @@ from playwright.sync_api import sync_playwright
 #     "walmart": WALMART_PRODUCT_URL_SELECTOR,
 # }
 
-"""
-Best Buy:
-1. Go to home url - good
-2. Go to search bar and search query - good
-3. Get all product urls - bad - I think due to pagination
-4. Go to next page - bad
-"""
 CONFIGS = {
-    "best_buy": BEST_BUY_PRODUCT_URL_SELECTOR,
+    "amazon": AMAZON_PRODUCT_URL_SELECTOR, 
 }
 
 def slow_scroll(page, step=200, delay=500):
@@ -72,8 +66,6 @@ def get_product_urls(page, selector):
     return result
 
 def scrape_product_urls(config_key):
-    seen_urls = set()
-    all_urls = []
     selector = CONFIGS[config_key]
     with sync_playwright() as p:
         browser = None
@@ -87,16 +79,17 @@ def scrape_product_urls(config_key):
 
             search_box = page.get_by_role(selector["search_box"]["role"], name=selector["search_box"]["name"], )
             
-            for query in search_queries[:1]:
+            for query in search_queries:
+                seen_urls = set()
+                all_urls = []
                 search_box.fill(query)
                 search_box.press("Enter")
 
                 page.wait_for_timeout(7000)
 
                 has_next_page = True
-                count = 0
 
-                while has_next_page and count < 2:     
+                while has_next_page:     
                     slow_scroll(page)
                     urls = get_product_urls(page, selector)
                     for url in urls:
@@ -104,13 +97,13 @@ def scrape_product_urls(config_key):
                             all_urls.append(url)
                             seen_urls.add(url)
                     has_next_page = click_next(page,selector)
-                    count += 1
 
-            output_dir = f"data/urls/{config_key}/{query}"
-            os.makedirs(output_dir, exist_ok=True)
-            with open(f"{output_dir}/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt", "w", encoding="utf-8") as f:
-                for url in all_urls:
-                    f.write(url + "\n")
+                dir = to_snake_case(query)
+                output_dir = f"data/urls/{config_key}/{dir}"
+                os.makedirs(output_dir, exist_ok=True)
+                with open(f"{output_dir}/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt", "w", encoding="utf-8") as f:
+                    for url in all_urls:
+                        f.write(url + "\n")
 
         except Exception as e:
             raise Exception("Error scraping product urls: ", e)
