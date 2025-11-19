@@ -12,6 +12,6 @@ BEST_BUY_PRODUCT_URL_SELECTOR = {
       "role": "textbox",
       "name": "Search",
     },
-    "product_urls":  'a.product-list-item-link',
+    "product_urls": 'a.product-list-item-link',
     "next_button": 'a[aria-label="Next page"]'
 }
