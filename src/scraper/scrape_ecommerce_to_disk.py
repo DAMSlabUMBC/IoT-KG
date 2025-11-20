@@ -6,6 +6,10 @@ Example Command:
   uv run -m src.scraper.scrape_to_disk --amazon
 
 Configs are located in src.configs
+
+PLEASE READ: 
+ITEM variable is to specify the folder you would like to read and write from (line 25, 43, 93)
+You still need to update the exact file you'd like to read
 """
 
 import os
@@ -18,11 +22,7 @@ from playwright_stealth import stealth_sync
 
 from src.configs import AMAZON_SELECTOR, BEST_BUY_SELECTOR, COSTCO_SELECTOR, TARGET_SELECTOR, WALMART_SELECTOR
 
-# TODO: Have this read from a file of urls
-URLS = [
-    "https://www.amazon.com/Apple-Watch-Smartwatch-Aluminum-Always/dp/B0FQF5BZ8Z/ref=sr_1_1_sspa?crid=3I8DRUBPXFK9O&dib=eyJ2IjoiMSJ9.rbA7sWhkavB3MiJI2T1Bw_HFqMsDD9VhwQXIYNa3HNJrEWEZOnae9x0wLm1eZuzrM-r1OfE5A0KLtDYohfEqau5QWpUhalwGv_jPMLdcspuqUXSQew1DML6iuhwrw_kHb9f59Ail-l0Txp4dagTzxq448ye0QhANKAck0HCPdZXkVIF2dFbsjzoPwNtBanFZq42FdDjIMrOzWPdSlJmDBAhniT6U7YNmFsp6ouqpeGE.x9hoR0h3WkixJFZadTN5b2EoYmuPRCalh4DkNvgvcdM&dib_tag=se&keywords=apple%2Bwatch&qid=1759442529&sprefix=apple%2Bwatch%2Caps%2C124&sr=8-1-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&th=1",
-    'https://www.amazon.com/Amazon-vibrant-helpful-routines-Charcoal/dp/B09B8V1LZ3/ref=sr_1_1?crid=1FILQKC6UQ9B5&dib=eyJ2IjoiMSJ9.z0kBrN5J4yDwE3Z69yvpFvmwHHypkHHD1EEB0Tq7d-twKIMmrd6CdpzAKHt3QwCIqpCGWOtUGso25ArgjUeQiby0wRAtPziXyEv_Tf6qw3ScIhyK8WiI5tvRhkwcaZAYJpqeIDTu_m3cf2k1gyY2IF6h7Q-TpQpXqLkVlwxHcP1Ckn7GRQitYbsIXzmMdVt_vBDTTWAeeARk7Yo7VrzCI4_YLLlMbjp_5sTMWrY7dRA.M_EhWcOAkjfHtGyy6bJoS1n8Dh5KYN-aTbt1Uez3DW0&dib_tag=se&keywords=echo%2Bdot&qid=1759097324&sprefix=echo%2Bdo%2Cspecialty-aps%2C87&sr=8-1-catcorr&srs=17938598011&ufe=app_do%3Aamzn1.fos.74097168-0c10-4b8a-b96b-8388a1a12daf&th=1' 
-]
+ITEM = "fitness_trackers"
 
 CONFIGS = {
     "amazon": AMAZON_SELECTOR,
@@ -33,30 +33,36 @@ CONFIGS = {
 }
 
 def scrape_to_disk(urls: list[str], config: str):
+    output_dir = f"data/html_dumps/{config}/{ITEM}"
+    os.makedirs(output_dir, exist_ok=True)
+
     with sync_playwright() as p:
             browser = None
             try:
                 browser =  p.firefox.launch(headless=False)
-                output_dir = f"data/html_dumps/{config}"
-                os.makedirs(output_dir, exist_ok=True)
+                page = browser.new_page()
+                stealth_sync(page)
 
-                for url in urls:
-                    page = browser.new_page()
-                    stealth_sync(page)
-                    try:
+                with open(f"{output_dir}/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.jsonl", "a", encoding="utf-8") as f:
+                    for url in urls:
                         page.goto(url, wait_until='domcontentloaded')
                         page.wait_for_timeout(5000)
 
-                        print(f"Scraping {url} using {config} config")
-
                         result = {"url": url}
-                        for key, value in CONFIGS[config].items():
-                            result[key] = page.locator(value).inner_text()
+                        for key, selector in CONFIGS[config].items():
+                            locator = page.locator(selector)
+                            count = locator.count()
 
-                        with open(f"{output_dir}/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json", "w", encoding="utf-8") as f:
-                            f.write(json.dumps(result, indent=2))
-                    finally:
-                        page.close()
+                            if count == 0:
+                                continue
+                            text = locator.first.inner_text().strip()
+
+                            if text:
+                                result[key] = text
+
+                        if len(result) > 1:
+                            f.write(json.dumps(result) + "\n")
+
             except Exception as e:
                 raise Exception("Error scraping to disk: ", e)
             finally:
@@ -79,10 +85,20 @@ if __name__ == '__main__':
     elif args.best_buy:
         config = "best_buy"
     elif args.costco:
-        args = "costco"
+        config = "costco"
     elif args.target:
-        args = "target"
+        config = "target"
     elif args.walmart:
         config = "walmart"
-    
-    scrape_to_disk(URLS, config)
+
+    urls = []
+
+    file_path = f"data/urls/{config}/{ITEM}/2025-11-19_02-35-58.txt"
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        for line in f:
+            url = line.strip()
+            if url:
+                urls.append(url)
+
+    scrape_to_disk(urls, config)
