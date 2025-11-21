@@ -22,7 +22,7 @@ from playwright_stealth import stealth_sync
 
 from src.configs import AMAZON_SELECTOR, BEST_BUY_SELECTOR, COSTCO_SELECTOR, TARGET_SELECTOR, WALMART_SELECTOR
 
-ITEM = "fitness_trackers"
+ITEM = "gps_trackers"
 
 CONFIGS = {
     "amazon": AMAZON_SELECTOR,
@@ -43,7 +43,7 @@ def scrape_to_disk(urls: list[str], config: str):
                 page = browser.new_page()
                 stealth_sync(page)
 
-                with open(f"{output_dir}/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.jsonl", "a", encoding="utf-8") as f:
+                with open(f"{output_dir}/{datetime.datetime.now().strftime('%Y-%m-%d')}.jsonl", "a", encoding="utf-8") as f:
                     for url in urls:
                         page.goto(url, wait_until='domcontentloaded')
                         page.wait_for_timeout(5000)
@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     urls = []
 
-    file_path = f"data/urls/{config}/{ITEM}/2025-11-19_02-35-58.txt"
+    file_path = f"data/urls/{config}/{ITEM}/2025-11-19.txt"
 
     with open(file_path, "r", encoding="utf-8") as f:
         for line in f:

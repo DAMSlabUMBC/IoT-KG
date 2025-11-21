@@ -101,7 +101,7 @@ def scrape_product_urls(config_key):
                 dir = to_snake_case(query)
                 output_dir = f"data/urls/{config_key}/{dir}"
                 os.makedirs(output_dir, exist_ok=True)
-                with open(f"{output_dir}/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt", "w", encoding="utf-8") as f:
+                with open(f"{output_dir}/{datetime.datetime.now().strftime('%Y-%m-%d')}.txt", "w", encoding="utf-8") as f:
                     for url in all_urls:
                         f.write(url + "\n")
 
