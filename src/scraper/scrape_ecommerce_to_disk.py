@@ -3,7 +3,7 @@ Scrape each URL in urls using selectors from the chosen config and
 write extracted fields to JSON files on disk for downstream LLM use.
 
 Example Command:
-  uv run -m src.scraper.scrape_to_disk --amazon
+  uv run -m src.scraper.scrape_ecommerce_to_disk --amazon
 
 Configs are located in src.configs
 
@@ -22,7 +22,7 @@ from playwright_stealth import stealth_sync
 
 from src.configs import AMAZON_SELECTOR, BEST_BUY_SELECTOR, COSTCO_SELECTOR, TARGET_SELECTOR, WALMART_SELECTOR
 
-ITEM = "gps_trackers"
+ITEM = "robot_vacuums"
 
 CONFIGS = {
     "amazon": AMAZON_SELECTOR,
@@ -45,23 +45,27 @@ def scrape_to_disk(urls: list[str], config: str):
 
                 with open(f"{output_dir}/{datetime.datetime.now().strftime('%Y-%m-%d')}.jsonl", "a", encoding="utf-8") as f:
                     for url in urls:
-                        page.goto(url, wait_until='domcontentloaded')
-                        page.wait_for_timeout(5000)
+                        try:
+                            page.goto(url, wait_until='domcontentloaded')
+                            page.wait_for_timeout(5000)
 
-                        result = {"url": url}
-                        for key, selector in CONFIGS[config].items():
-                            locator = page.locator(selector)
-                            count = locator.count()
+                            result = {"url": url}
+                            for key, selector in CONFIGS[config].items():
+                                locator = page.locator(selector)
+                                count = locator.count()
 
-                            if count == 0:
-                                continue
-                            text = locator.first.inner_text().strip()
+                                if count == 0:
+                                    continue
+                                text = locator.first.inner_text().strip()
 
-                            if text:
-                                result[key] = text
+                                if text:
+                                    result[key] = text
 
-                        if len(result) > 1:
-                            f.write(json.dumps(result) + "\n")
+                            if len(result) > 1:
+                                f.write(json.dumps(result) + "\n")
+                        except Exception as e:
+                            print(f"[ERROR] Failed to scrape {url}: {e}")
+                            continue
 
             except Exception as e:
                 raise Exception("Error scraping to disk: ", e)
