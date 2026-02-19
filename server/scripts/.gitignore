@@ -1,8 +1,0 @@
-amazon_batches/
-gia_KG.py
-analysis/__pycache__
-analysis/.ipynb_checkpoints
-llm-scraper_error/
-llm-scraper_output/
-jupyter_error/
-jupyter_output/
