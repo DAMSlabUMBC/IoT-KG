@@ -1,0 +1,4 @@
+{
+    "start_pattern": "\\*\\*_SmartThings U\\.S\\. Privacy Notice_\\*\\*",
+    "end_pattern": "\\*\\*_SmartThings_\\*\\*\\*\\* _U\\.S\\. Privacy Notice for Minors_\\*\\*"
+}
