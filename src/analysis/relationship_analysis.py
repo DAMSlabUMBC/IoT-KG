@@ -8,6 +8,19 @@ class Triple(TypedDict):
     predicate: str
     object: str
 
+# class TripleNode(TypedDict):
+#     type: str
+#     value: str
+
+# class Triple(TypedDict):
+#     subject: TripleNode
+#     predicate: str
+#     object: TripleNode
+
+class TriplesResponse(TypedDict):
+    triples: List[Triple]
+
+
 
 class TriplesAnalysis:
     def __init__(self):
@@ -28,9 +41,9 @@ class TriplesAnalysis:
 
                 Output:
                 [
-                    {"subject": "Amazon Echo Dot", "predicate": "works_with", "object": "Alexa"},
-                    {"subject": "Amazon Echo Dot", "predicate": "is_a", "object": "Speaker"},
-                    {"subject": "Amazon Echo Dot", "predicate": "controls", "object": "smart home"}
+                    {{"subject": "Amazon Echo Dot", "predicate": "works_with", "object": "Alexa"}},
+                    {{"subject": "Amazon Echo Dot", "predicate": "is_a", "object": "Speaker"}},
+                    {{"subject": "Amazon Echo Dot", "predicate": "controls", "object": "smart home"}}
                 ]
 
                 Entities: {entities}
@@ -40,6 +53,7 @@ class TriplesAnalysis:
     
     def analyze(self, entities, text):
         prompt = self.prompt.format(entities=entities, text=text)
-        structured_llm = self.llm.with_structured_output(List[Triple], method="json_schema")
-        response = structured_llm.invoke(prompt)
+        print(f"FORMAT VARIABLES: {self.prompt.input_variables}")
+        structured_llm = self.llm.with_structured_output(TriplesResponse, method="json_schema")
+        response: TriplesResponse = structured_llm.invoke(prompt)
         return response
