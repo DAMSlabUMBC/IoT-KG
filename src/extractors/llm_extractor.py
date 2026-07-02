@@ -54,7 +54,7 @@ Extract ALL factual knowledge triples from the Amazon product page content below
 
 A triple is (subject, predicate, object):
 - subject: the main product or an entity related to it
-- predicate: the relationship type (use camelCase from the preferred list when possible)
+- predicate: the relationship type (must be from the allowed list below)
 - object: the related entity or attribute value
 
 Node types (use for subject_type and object_type):
@@ -67,7 +67,7 @@ Node types (use for subject_type and object_type):
 - identifier    : ASINs, model numbers, part numbers
 - property      : technical specs, dimensions, weights, prices, dates, ratings
 
-Preferred predicates (use these when they fit; use hasProperty as fallback):
+Allowed predicates (you MUST only use predicates from this list — no others):
 {predicates}
 
 Rules:
@@ -75,7 +75,8 @@ Rules:
   physical properties, identifiers, and categories.
 - Use the product title as the subject value for facts about the main product.
 - For multi-value fields (e.g. "Windows, Mac, Linux"), create one triple per value.
-- Do not hallucinate — only extract facts present in the content.
+- Copy object values VERBATIM from the source text — do not paraphrase or rephrase.
+- Do not hallucinate — only extract facts explicitly present in the content.
 
 Product Page Content:
 {content}

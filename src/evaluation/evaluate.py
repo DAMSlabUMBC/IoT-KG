@@ -16,7 +16,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from src.evaluation.metrics import EvaluationMetrics, compute_metrics
+from src.evaluation.metrics import EvaluationMetrics, FalsePositive, compute_metrics
 from src.extractors.amazon.template_extractor import AmazonTemplateExtractor
 from src.extractors.llm_extractor import LLMTripleExtractor
 from src.types.triple import Triple
@@ -85,26 +85,23 @@ def print_report(
 
     if metrics.matched_pairs:
         print()
-        _section(f"Matched Triples", len(metrics.matched_pairs))
+        _section("Matched Triples", len(metrics.matched_pairs))
         for templ, llm in metrics.matched_pairs:
-            pred = templ.predicate
-            if templ.object.value == llm.object.value:
-                match_note = "(exact)"
-            else:
-                match_note = f'(fuzzy: template="{templ.object.value}"  llm="{llm.object.value}")'
-            print(f"  ✓ [{pred}]  {match_note}")
+            print(f"  ✓ [{templ.predicate}]  {_fmt(templ)}")
 
     if metrics.missed:
         print()
-        _section(f"Missed by LLM  (False Negatives)", len(metrics.missed))
+        _section("Missed by LLM  (False Negatives)", len(metrics.missed))
         for t in metrics.missed:
             print(f"  ✗ {_fmt(t)}")
 
     if metrics.extra:
         print()
-        _section(f"LLM-only Triples  (False Positives)", len(metrics.extra))
-        for t in metrics.extra:
-            print(f"  + {_fmt(t)}")
+        _section("LLM-only Triples  (Needs Human Review)", len(metrics.extra))
+        print("  Label each as 'hallucination' or 'valid_extra' in the JSON output.")
+        print()
+        for fp in metrics.extra:
+            print(f"  ? {_fmt(fp.triple)}")
 
     print()
 
@@ -143,7 +140,10 @@ def save_results(
             for tmpl, llm in metrics.matched_pairs
         ],
         "missed": [_triple_to_dict(t) for t in metrics.missed],
-        "extra": [_triple_to_dict(t) for t in metrics.extra],
+        "extra": [
+            {"triple": _triple_to_dict(fp.triple), "review": fp.review}
+            for fp in metrics.extra
+        ],
         "metrics": {
             "true_positives": metrics.true_positives,
             "false_positives": metrics.false_positives,
@@ -168,15 +168,13 @@ def save_results(
 def evaluate(
     url: str = DEFAULT_URL,
     model: str = DEFAULT_MODEL,
-    threshold: float = 0.8,
 ) -> EvaluationMetrics:
     """
     Run both extractors on an Amazon product URL and compare results.
 
     Args:
-        url       : Amazon product page URL.
-        model     : Ollama model name used for LLM extraction.
-        threshold : Fuzzy-match similarity threshold (0–1) for triple matching.
+        url   : Amazon product page URL.
+        model : Ollama model name used for LLM extraction.
 
     Returns:
         EvaluationMetrics with precision, recall, F1, and detailed match lists.
@@ -191,7 +189,7 @@ def evaluate(
     llm_triples = llm_extractor.extract(template_extractor.scraped_data)
     print(f"       {len(llm_triples)} triples extracted")
 
-    metrics = compute_metrics(template_triples, llm_triples, threshold=threshold)
+    metrics = compute_metrics(template_triples, llm_triples)
 
     print_report(url, template_triples, llm_triples, metrics)
 
