@@ -5,5 +5,4 @@ TODO.md
 __pycache__/
 *.py[cod]
 
-data/urls
-data/html_dumps
+data/
