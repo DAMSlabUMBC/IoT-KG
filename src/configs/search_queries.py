@@ -1,7 +1,7 @@
 search_queries = [
     "smart plugs",
     "smart outlets",
-    "smart light bulbs ",
+    "smart light bulbs",
     "smart switches",
     "smart dimmers",
     "smart thermostats",
