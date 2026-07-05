@@ -1,55 +1,109 @@
 # This is the file to execute for analysis
 
 """
-1. Know what to search by finding keywords for IoT devices
-2. Search the keywords on all ecommerce
-3. Save the urls
+Reads scraped product records from data/html_dumps one file at a time,
+classifies each product as IoT or not, extracts IoT entities from the IoT
+products, forms relationship triples from those entities, and writes the
+triples to data/triplets.
 
-4. Pass the urls into our scraper x
-5. Before passing it into analysis, we want to filter out all NON iot content that we've scraped
-5. Pass the scrape results into our analysis pipeline
-
+Each output line is a JSON object containing the triple plus the html dump
+record it was made from (which carries the product URL) as metadata.
 """
-# TODO: Read products from html dump
-products = [
-    {"url": "https://www.amazon.com/Fitness-Activity-Pedometer-Calories-Waterproof/dp/B0CC9DXVPF/ref=sr_1_1?dib=eyJ2IjoiMSJ9._azUbr4sy4Ko7MWovb6pL0BW2UITI92f-bjl7IwIHiCen2PcXSP6KxDXHrmgjuBSkkk5K8OMqCrSmH5Yy9TzaM53si3XuVuKGKejrFyl5L3jhPTWRXI90lhWLlbHduaZUaZTUgLdgN_iMcguACztg8W2Ab2pLVp5XoF_oXr1RAJBfI10wsTFWOkuBCkluVFlXX2h70LrjcG32Ink5VEvdReDoT8F2gvWHW51ipF-wOY.pb_1F-3PjMq2tGz3nMcEIdktLG-xRh0xIhj1xbpPb1g&dib_tag=se&keywords=fitness+trackers&qid=1763536933&sr=8-1", "title": "Fitness Tracker Watch with Heart Rate Monitor, Large Screen Activity Tracker with Pedometer, Sleep Monitor, Calories & Step Counter, 5ATM Waterproof Smart Watch for Women Men Fitness Watch for Sports", "features": "About this item\nHeart Rate and Sleep Monitoring: The Fitness Tracker monitors your heart rate automatically all day, and you can select manual mode through the App. The fitness Watch also monitors your sleep at night, providing a detailed analysis of your sleep quality (deep sleep, light sleep, awake time). It is a health advisor for women men in daily life.\nMulti Sport Modes with Activity Tracking: The fitness tracker features 9 sport modes like running, walking and more. Additionally, the activity tracker records daily steps, calories burned, walking distance and active time throughout the day. You can also set a daily steps goals through the App to track your progress.\nSmart Notification Reminder: You can get SMS messages, and SNS notifications directly on your wrist including Facebook, Twitter, Gmail ect. You won't miss any important calls and message and stay updated. Please note: the smart watch can not make calls or text.\nLong Battery Life and 5ATM Waterproof: This smart watch only requires 2 hours of charging and can be used for 5-7 days continuously. 5ATM waterproof rating can withstand daily sweat, washing hands and rainy day, allowing you to fully enjoy your workouts.\nMore Functions & Compatibility: Fitness watch comes with multiple smart functions such as stopwatch, alarm clock, breathing guide and sedentary alert, enhancing convenience to your daily routine. The tracker is compatible with iPhone Android Phones which run on iOS 8.0 or Android OS 4.0 & Bluetooth 4.0 or above. Please note that it is not compatible with tablets or computers.", "integerPartOfPrice": "15\n.", "decimalPartOfPrice": "99"},
-    {"url": "https://www.amazon.com/Fitness-Activity-Pedometer-Calories-Waterproof/dp/B0CC9DXVPF/ref=sr_1_1?dib=eyJ2IjoiMSJ9._azUbr4sy4Ko7MWovb6pL0BW2UITI92f-bjl7IwIHiCen2PcXSP6KxDXHrmgjuBSkkk5K8OMqCrSmH5Yy9TzaM53si3XuVuKGKejrFyl5L3jhPTWRXI90lhWLlbHduaZUaZTUgLdgN_iMcguACztg8W2Ab2pLVp5XoF_oXr1RAJBfI10wsTFWOkuBCkluVFlXX2h70LrjcG32Ink5VEvdReDoT8F2gvWHW51ipF-wOY.pb_1F-3PjMq2tGz3nMcEIdktLG-xRh0xIhj1xbpPb1g&dib_tag=se&keywords=fitness+trackers&qid=1763536933&sr=8-1#customerReviews", "title": "Fitness Tracker Watch with Heart Rate Monitor, Large Screen Activity Tracker with Pedometer, Sleep Monitor, Calories & Step Counter, 5ATM Waterproof Smart Watch for Women Men Fitness Watch for Sports", "features": "About this item\nHeart Rate and Sleep Monitoring: The Fitness Tracker monitors your heart rate automatically all day, and you can select manual mode through the App. The fitness Watch also monitors your sleep at night, providing a detailed analysis of your sleep quality (deep sleep, light sleep, awake time). It is a health advisor for women men in daily life.\nMulti Sport Modes with Activity Tracking: The fitness tracker features 9 sport modes like running, walking and more. Additionally, the activity tracker records daily steps, calories burned, walking distance and active time throughout the day. You can also set a daily steps goals through the App to track your progress.\nSmart Notification Reminder: You can get SMS messages, and SNS notifications directly on your wrist including Facebook, Twitter, Gmail ect. You won't miss any important calls and message and stay updated. Please note: the smart watch can not make calls or text.\nLong Battery Life and 5ATM Waterproof: This smart watch only requires 2 hours of charging and can be used for 5-7 days continuously. 5ATM waterproof rating can withstand daily sweat, washing hands and rainy day, allowing you to fully enjoy your workouts.\nMore Functions & Compatibility: Fitness watch comes with multiple smart functions such as stopwatch, alarm clock, breathing guide and sedentary alert, enhancing convenience to your daily routine. The tracker is compatible with iPhone Android Phones which run on iOS 8.0 or Android OS 4.0 & Bluetooth 4.0 or above. Please note that it is not compatible with tablets or computers.", "integerPartOfPrice": "15\n.", "decimalPartOfPrice": "99"},
-    {"url": "https://www.amazon.com/Fitbit-Management-Intensity-Tracking-Midnight/dp/B0B5F9SZW7/ref=sr_1_2?dib=eyJ2IjoiMSJ9._azUbr4sy4Ko7MWovb6pL0BW2UITI92f-bjl7IwIHiCen2PcXSP6KxDXHrmgjuBSkkk5K8OMqCrSmH5Yy9TzaM53si3XuVuKGKejrFyl5L3jhPTWRXI90lhWLlbHduaZUaZTUgLdgN_iMcguACztg8W2Ab2pLVp5XoF_oXr1RAJBfI10wsTFWOkuBCkluVFlXX2h70LrjcG32Ink5VEvdReDoT8F2gvWHW51ipF-wOY.pb_1F-3PjMq2tGz3nMcEIdktLG-xRh0xIhj1xbpPb1g&dib_tag=se&keywords=fitness+trackers&qid=1763536933&sr=8-2", "title": "Fitbit Inspire 3 Health &-Fitness-Tracker with Stress Management, Workout Intensity, Sleep Tracking, 24/7 Heart Rate and more, Midnight Zen/Black One Size (S & L Bands Included)", "features": "About this item\nInspire 3 is the tracker that helps you find your energy, do what you love and feel your best. All you have to do is wear it.Operating temperature: 0\u00b0 to 40\u00b0C\nMove more: Daily Readiness Score(1), Active Zone Minutes, all-day activity tracking and 24/7 heart rate, 20+ exercise modes, automatic exercise tracking and reminders to move\nStress less: always-on wellness tracking, daily Stress Management Score, mindfulness sessions, relax breathing sessions, irregular heart rhythm notifications(2), SpO2(3), menstrual health tracking, resting heart rate and high/low heart rate notifications\nSleep better: automatic sleep tracking, personalized Sleep Profile(1), daily detailed Sleep Score, smart wake vibrating alarm, sleep mode\nComfortably connected day and night: calls, texts & smartphone app notifications(4), color touchscreen with customizable clock faces, super lightweight and water resistant to 50 meters, up to 10 day battery life(5)\nIncludes a 6-month Premium membership complete with personalized insights, advanced analytics and more (New & returning Premium users only. Must activate trial within 60-days of device activation. Content and features may change)", "integerPartOfPrice": "69\n.", "decimalPartOfPrice": "95"},
-    {"url": "https://www.amazon.com/Fitbit-Management-Intensity-Tracking-Midnight/dp/B0B5F9SZW7/ref=sr_1_2?dib=eyJ2IjoiMSJ9._azUbr4sy4Ko7MWovb6pL0BW2UITI92f-bjl7IwIHiCen2PcXSP6KxDXHrmgjuBSkkk5K8OMqCrSmH5Yy9TzaM53si3XuVuKGKejrFyl5L3jhPTWRXI90lhWLlbHduaZUaZTUgLdgN_iMcguACztg8W2Ab2pLVp5XoF_oXr1RAJBfI10wsTFWOkuBCkluVFlXX2h70LrjcG32Ink5VEvdReDoT8F2gvWHW51ipF-wOY.pb_1F-3PjMq2tGz3nMcEIdktLG-xRh0xIhj1xbpPb1g&dib_tag=se&keywords=fitness+trackers&qid=1763536933&sr=8-2#customerReviews", "title": "Fitbit Inspire 3 Health &-Fitness-Tracker with Stress Management, Workout Intensity, Sleep Tracking, 24/7 Heart Rate and more, Midnight Zen/Black One Size (S & L Bands Included)", "features": "About this item\nInspire 3 is the tracker that helps you find your energy, do what you love and feel your best. All you have to do is wear it.Operating temperature: 0\u00b0 to 40\u00b0C\nMove more: Daily Readiness Score(1), Active Zone Minutes, all-day activity tracking and 24/7 heart rate, 20+ exercise modes, automatic exercise tracking and reminders to move\nStress less: always-on wellness tracking, daily Stress Management Score, mindfulness sessions, relax breathing sessions, irregular heart rhythm notifications(2), SpO2(3), menstrual health tracking, resting heart rate and high/low heart rate notifications\nSleep better: automatic sleep tracking, personalized Sleep Profile(1), daily detailed Sleep Score, smart wake vibrating alarm, sleep mode\nComfortably connected day and night: calls, texts & smartphone app notifications(4), color touchscreen with customizable clock faces, super lightweight and water resistant to 50 meters, up to 10 day battery life(5)\nIncludes a 6-month Premium membership complete with personalized insights, advanced analytics and more (New & returning Premium users only. Must activate trial within 60-days of device activation. Content and features may change)", "integerPartOfPrice": "69\n.", "decimalPartOfPrice": "95"},
-    {"url": "https://aax-us-east-retail-direct.amazon.com/x/c/JG8km3TwJdNcaoAgzpFgcHUAAAGamv4TSQEAAAH2AQBvbm9fdHhuX2JpZDQgICBvbm9fdHhuX2ltcDEgICDDBD2o/clv1_CEuOPUxokZA0iHrVe-kk2SzwZWBEWLM-kMdZsxeGp-Fl138q2WfnPP018nHz9hvWjq0yzpNb3XTPsunPyWEceUJyDCudLuP3Sxgdf05aZ3yiI6xjsQYOLZEdHEepooamXJOUI0W78tANGk5hgFv_ak5TLFFOGshzBElqUqEnHhGU36Ta0Ek8SAz5MJbld7QzBH9acdHMzpkFUDVhJ9oQXuEFlsWsnsI6KjDhFKorgxcWp4FvlLz2S1sKgEji6npOAE_zFP7W4zho-hUrANRvXRGwenKzslPpBOrh0qfSX68rPFKB27yFyCnOZALHHJaq9-sczsxsTvDakJroCP2IOMBN7NhJQSYXn64J6IxPPaYG9F9BCEWn0z-R5rIBU0KHcCRtq0SmgkUgr2_RNLDSfFtyS7DUv8pDZfIZM3hCrgUANL9bkxVaLztUwaVWXQoMHaeUao3xp-WQHS8cbA2SvJ4yBG-io1a6UxNtQYpRv-6TMit65IyG_WTyaXgbMNKPkN1KwzpnRZUegR2wuFTAxzjxdS5BQE8kKTSGVWbqP7_EUx6VCwkn8VE8V2TxW33iEcUlgPRYbwXA3KpZl5oMJgvYOzBhuSZf0u8VkoKGnnxQgpyrna4MbFT47TeoTvCKIkEibO4XMTxh3vdiCJNanTcTooDIBQpNa1QCnsdT0rwpF18HfhimsEAk_ALhfbxq7S975Vppm_kF2rYGHlqyNX4xp4XPFKTE8ZSZAnEmHyfWvUjCHe8o5WNlt-lwVdm2rLxtEmnYsUPe8wTRHmC5EAJH-ibgKHRkhOB5StAoci7Jx0kYY9BMgwVPv6TuTUyXceujTQh40CvMo9xzXO1Jm7uAn3EppvW9PviJusC_jXPq8XnBx18I9laXoVOgmSnIt6YmmuA5lAbEAcEeTMMxCtqHx_iR3A1VMyI2AjiVqCHxrilGIEM5aRBWRxrI9mWCmg6jU-f5_r6cjOfQwga_UYJ2Le7lRqnwxlybdi14aOAYYgRZdnlLbaj3lyjuGGcsCAWFxK0NwD8JfL819rii_DFB2Sp6JvG_jW4i64RYpQV2f12Ya6nyERn7aLF7J9Z-VCu-d46TSAMsN-OedsHdudf2UALawZhOWvYaCwJBJorCNnSpXbtpmnlhHpX3g8XjueAaR9fmhDkDAOpto3MbRXo1V-rBAmfRPbceu4jWtLCgx0Gb5lCu5YlcjhpEQckXJUuzJ1XG4VOyeSIyjXyDNfbF9uZwoKxBoDqo1JlyKVfMIlcGIn-SyFfg1i5xF6PzfpI5ovqMb1jEVadSYYsFm1I517t6qYKy4SCpn3S4JNaoIPJnZ_uHz_kepRmu9JsdObQ-Tx-nlEjNpMAhUmo50ovKstF8539QfJBXD9tCvLE6tjunLXCzttLmMUDLYbZFPQDRZ16WICzBfB4gD62xT4GNjzmuCUlIxpck-6TDhV18dCFD3LMZM8MxLz6mFRqSznNaDHbAprPcwDzlFDD7bVzc3wy1eegLlrIR_u8Y7kgOtVDDNX6zPHRc2LI_pdeJ1UT7ZytRdvJXJoPuT843JDPigfDmDlyzYE6GJv8-qMuRy_GguoaRaa1xIucyivVfVuahO1LOm6fGX__OJ0MPbCpxttXj8YURhI3P-QnhxP2UaEjMGxSoohN8uW9WfZWNWQmdLUrr0YwXDieFqBhMxrxXWSHvJ04qAYwpg_IZS_uCOdgV4LX0TCd03fWXnu21_MJreYbAsyptmmqRpM4JHxjq1ipwjja5k6FUOTShxlKpseflxeUhVasEzlrND9YCs65Lxw6S-IZAIq5bRrtJ_FAvDOze01jyfKSnEw7ovKbBOMK304IQ7swvZ8-YleVykCwnac5CKqcagqbpGiCVKbXOs6JQUM2TH_1LWi9VmhZplfPeMIWpnHk_JY2D5oI-h_yNUy57t_eS1SR2SyLdLfWwyxFs3sE8a-XNlKUZq3sTDBRN4I_ia5cb_iSaEx15j73McSAROfGNk8a5Zf-0KXLxlclwBneNdbMULAbzIdjjIzkjdNiJZqPxryTCgVwCIPpRai9od7MpiRVbi_SGjczXydduVoacRPp2QZ52XoItq4dHEwNTbcIa2H8LJ6qc_HVcXmRaV_Gia32BOQWiPkMLXKWl_9LiF6N28nYqEfKiU_1DfRWAe5tuk9RKIPxBp66nFrO-TQ_dyOsL5NvckP02jFQOIB17SdJClyEpg9gnVenuEYWMX60HfzNFHG92-eqnB_q4opfYrrJadqYXjf2V_9Bdhhkr_LL8M1cE1fcKfsVSOi7l35e9deGqnod7DiXLCPaKlU7OnglzB6xbeoPSQ_PAxS1WT6rMNIxGI0y8xfBfHnxHW0vvBc7myasVrX_Z8OAN2HnUjT2kFs-CXPUkhY15jwyWTsVeIacwQn0QSll7SYQcf5kNMY8-BWxgiILDq8ffv4x5z0g1G3cmTlELmP_sgMdvZzAS1i3bzSK0LwllvseyoJbuABSW_TpW/https://www.amazon.com/dp/B0DY2VVZWZ?pd_rd_i=B0DY2VVZWZ&pf_rd_p=c8b39f81-ded8-4d75-80c2-6dfa03cbb699&pf_rd_r=QCCPR5JCYGFHDMA4YGBP&pd_rd_wg=6seIu&pd_rd_w=fEoB4&pd_rd_r=21b96011-4711-46a9-a34b-e03b2a5a10b5", "title": "WHOOP 5.0/MG Activity Tracker - 12 Month Membership - Health and Fitness Wearable \u2013 24/7 Activity and Sleep Tracker, Personalized Coaching, Menstrual Cycle Insights \u2013 14+ Days Battery Life", "features": "About this item\nEVERYTHING YOU NEED IS INCLUDED: Your WHOOP purchase includes a 12-month WHOOP One membership, a WHOOP 5.0 device, a CoreKnit band, and a corded Basic Charger.\nCONTINUOUS MONITORING: WHOOP monitors your most important metrics with lab-level accuracy, including heart rate, heart rate variability, sleep, menstrual cycle, and VO2 max\u2014providing 24/7 insights to optimize fitness, recovery, and overall health.\nUNDERSTAND THE IMPACT OF YOUR HABITS: Capture 160+ daily behaviors like training, diet, consistent wake time, stress levels, and more with the WHOOP Journal to understand how habits help or hurt your recovery.\nPERSONALIZED GUIDANCE WITH WHOOP COACH: Get daily sleep, strain, and recovery recommendations to maximize your performance, as well as AI-powered responses to your health and fitness questions.\nSTAY CHARGED FOR 14+ DAYS: Plug in to power up with the corded Basic Charger, made for fast charging and longer battery life\u2014or, add the waterproof* Wireless PowerPack to your purchase.", "integerPartOfPrice": "179\n.", "decimalPartOfPrice": "00"},
-    {"url": "https://aax-us-east-retail-direct.amazon.com/x/c/JG8km3TwJdNcaoAgzpFgcHUAAAGamv4TSQEAAAH2AQBvbm9fdHhuX2JpZDQgICBvbm9fdHhuX2ltcDEgICDDBD2o/clv1_CEuOPUxokZA0iHrVe-kk2SzwZWBEWLM-kMdZsxeGp-Fl138q2WfnPP018nHz9hvWjq0yzpNb3XTPsunPyWEceUJyDCudLuP3Sxgdf05aZ3yiI6xjsQYOLZEdHEepooamXJOUI0W78tANGk5hgFv_ak5TLFFOGshzBElqUqEnHhGU36Ta0Ek8SAz5MJbld7QzBH9acdHMzpkFUDVhJ9oQXuEFlsWsnsI6KjDhFKorgxcWp4FvlLz2S1sKgEji6npOAE_zFP7W4zho-hUrANRvXRGwenKzslPpBOrh0qfSX68rPFKB27yFyCnOZALHHJaq9-sczsxsTvDakJroCP2IOMBN7NhJQSYXn64J6IxPPaYG9F9BCEWn0z-R5rIBU0KHcCRtq0SmgkUgr2_RNLDSfFtyS7DUv8pDZfIZM3hCrgUANL9bkxVaLztUwaVWXQoMHaeUao3xp-WQHS8cbA2SvJ4yBG-io1a6UxNtQYpRv-6TMit65IyG_WTyaXgbMNKPkN1KwzpnRZUegR2wuFTAxzjxdS5BQE8kKTSGVWbqP7_EUx6VCwkn8VE8V2TxW33iEcUlgPRYbwXA3KpZl5oMJgvYOzBhuSZf0u8VkoKGnnxQgpyrna4MbFT47TeoTvCKIkEibO4XMTxh3vdiCJNanTcTooDIBQpNa1QCnsdT0rwpF18HfhimsEAk_ALhfbxq7S975Vppm_kF2rYGHlqyNX4xp4XPFKTE8ZSZAnEmHyfWvUjCHe8o5WNlt-lwVdm2rLxtEmnYsUPe8wTRHmC5EAJH-ibgKHRkhOB5StAoci7Jx0kYY9BMgwVPv6TuTUyXceujTQh40CvMo9xzXO1Jm7uAn3EppvW9PviJusC_jXPq8XnBx18I9laXoVOgmSnIt6YmmuA5lAbEAcEeTMMxCtqHx_iR3A1VMyI2AjiVqCHxrilGIEM5aRBWRxrI9mWCmg6jU-f5_r6cjOfQwga_UYJ2Le7lRqnwxlybdi14aOAYYgRZdnlLbaj3lyjuGGcsCAWFxK0NwD8JfL819rii_DFB2Sp6JvG_jW4i64RYpQV2f12Ya6nyERn7aLF7J9Z-VCu-d46TSAMsN-OedsHdudf2UALawZhOWvYaCwJBJorCNnSpXbtpmnlhHpX3g8XjueAaR9fmhDkDAOpto3MbRXo1V-rBAmfRPbceu4jWtLCgx0Gb5lCu5YlcjhpEQckXJUuzJ1XG4VOyeSIyjXyDNfbF9uZwoKxBoDqo1JlyKVfMIlcGIn-SyFfg1i5xF6PzfpI5ovqMb1jEVadSYYsFm1I517t6qYKy4SCpn3S4JNaoIPJnZ_uHz_kepRmu9JsdObQ-Tx-nlEjNpMAhUmo50ovKstF8539QfJBXD9tCvLE6tjunLXCzttLmMUDLYbZFPQDRZ16WICzBfB4gD62xT4GNjzmuCUlIxpck-6TDhV18dCFD3LMZM8MxLz6mFRqSznNaDHbAprPcwDzlFDD7bVzc3wy1eegLlrIR_u8Y7kgOtVDDNX6zPHRc2LI_pdeJ1UT7ZytRdvJXJoPuT843JDPigfDmDlyzYE6GJv8-qMuRy_GguoaRaa1xIucyivVfVuahO1LOm6fGX__OJ0MPbCpxttXj8YURhI3P-QnhxP2UaEjMGxSoohN8uW9WfZWNWQmdLUrr0YwXDieFqBhMxrxXWSHvJ04qAYwpg_IZS_uCOdgV4LX0TCd03fWXnu21_MJreYbAsyptmmqRpM4JHxjq1ipwjja5k6FUOTShxlKpseflxeUhVasEzlrND9YCs65Lxw6S-IZAIq5bRrtJ_FAvDOze01jyfKSnEw7ovKbBOMK304IQ7swvZ8-YleVykCwnac5CKqcagqbpGiCVKbXOs6JQUM2TH_1LWi9VmhZplfPeMIWpnHk_JY2D5oI-h_yNUy57t_eS1SR2SyLdLfWwyxFs3sE8a-XNlKUZq3sTDBRN4I_ia5cb_iSaEx15j73McSAROfGNk8a5Zf-0KXLxlclwBneNdbMULAbzIdjjIzkjdNiJZqPxryTCgVwCIPpRai9od7MpiRVbi_SGjczXydduVoacRPp2QZ52XoItq4dHEwNTbcIa2H8LJ6qc_HVcXmRaV_Gia32BOQWiPkMLXKWl_9LiF6N28nYqEfKiU_1DfRWAe5tuk9RKIPxBp66nFrO-TQ_dyOsL5NvckP02jFQOIB17SdJClyEpg9gnVenuEYWMX60HfzNFHG92-eqnB_q4opfYrrJadqYXjf2V_9Bdhhkr_LL8M1cE1fcKfsVSOi7l35e9deGqnod7DiXLCPaKlU7OnglzB6xbeoPSQ_PAxS1WT6rMNIxGI0y8xfBfHnxHW0vvBc7myasVrX_Z8OAN2HnUjT2kFs-CXPUkhY15jwyWTsVeIacwQn0QSll7SYQcf5kNMY8-BWxgiILDq8ffv4x5z0g1G3cmTlELmP_sgMdvZzAS1i3bzSK0LwllvseyoJbuABSW_TpW/https://www.amazon.com/WHOOP-One-Membership-Personalized-Menstrual/dp/B0DY2VVZWZ/ref=sxin_18_sbv_search_btf?content-id=amzn1.sym.c8b39f81-ded8-4d75-80c2-6dfa03cbb699%3Aamzn1.sym.c8b39f81-ded8-4d75-80c2-6dfa03cbb699&cv_ct_cx=fitness+trackers&keywords=fitness+trackers&pd_rd_i=B0DY2VVZWZ&pd_rd_r=21b96011-4711-46a9-a34b-e03b2a5a10b5&pd_rd_w=fEoB4&pd_rd_wg=6seIu&pf_rd_p=c8b39f81-ded8-4d75-80c2-6dfa03cbb699&pf_rd_r=QCCPR5JCYGFHDMA4YGBP&qid=1763536933&sbo=RZvfv%2F%2FHxDF%2BO5021pAnSA%3D%3D&sr=1-1-5190daf0-67e3-427c-bea6-c72c1df98776", "title": "WHOOP 5.0/MG Activity Tracker - 12 Month Membership - Health and Fitness Wearable \u2013 24/7 Activity and Sleep Tracker, Personalized Coaching, Menstrual Cycle Insights \u2013 14+ Days Battery Life", "features": "About this item\nEVERYTHING YOU NEED IS INCLUDED: Your WHOOP purchase includes a 12-month WHOOP One membership, a WHOOP 5.0 device, a CoreKnit band, and a corded Basic Charger.\nCONTINUOUS MONITORING: WHOOP monitors your most important metrics with lab-level accuracy, including heart rate, heart rate variability, sleep, menstrual cycle, and VO2 max\u2014providing 24/7 insights to optimize fitness, recovery, and overall health.\nUNDERSTAND THE IMPACT OF YOUR HABITS: Capture 160+ daily behaviors like training, diet, consistent wake time, stress levels, and more with the WHOOP Journal to understand how habits help or hurt your recovery.\nPERSONALIZED GUIDANCE WITH WHOOP COACH: Get daily sleep, strain, and recovery recommendations to maximize your performance, as well as AI-powered responses to your health and fitness questions.\nSTAY CHARGED FOR 14+ DAYS: Plug in to power up with the corded Basic Charger, made for fast charging and longer battery life\u2014or, add the waterproof* Wireless PowerPack to your purchase.", "integerPartOfPrice": "179\n.", "decimalPartOfPrice": "00"},
-    {"url": "https://aax-us-east-retail-direct.amazon.com/x/c/JG8km3TwJdNcaoAgzpFgcHUAAAGamv4TSQEAAAH2AQBvbm9fdHhuX2JpZDQgICBvbm9fdHhuX2ltcDEgICDDBD2o/clv1_CEuOPUxokZA0iHrVe-kk2SzwZWBEWLM-kMdZsxeGp-Fl138q2WfnPP018nHz9hvWjq0yzpNb3XTPsunPyWEceUJyDCudLuP3Sxgdf05aZ3yiI6xjsQYOLZEdHEepooamXJOUI0W78tANGk5hgFv_ak5TLFFOGshzBElqUqEnHhGU36Ta0Ek8SAz5MJbld7QzBH9acdHMzpkFUDVhJ9oQXuEFlsWsnsI6KjDhFKorgxcWp4FvlLz2S1sKgEji6npOAE_zFP7W4zho-hUrANRvXRGwenKzslPpBOrh0qfSX68rPFKB27yFyCnOZALHHJaq9-sczsxsTvDakJroCP2IOMBN7NhJQSYXn64J6IxPPaYG9F9BCEWn0z-R5rIBU0KHcCRtq0SmgkUgr2_RNLDSfFtyS7DUv8pDZfIZM3hCrgUANL9bkxVaLztUwaVWXQoMHaeUao3xp-WQHS8cbA2SvJ4yBG-io1a6UxNtQYpRv-6TMit65IyG_WTyaXgbMNKPkN1KwzpnRZUegR2wuFTAxzjxdS5BQE8kKTSGVWbqP7_EUx6VCwkn8VE8V2TxW33iEcUlgPRYbwXA3KpZl5oMJgvYOzBhuSZf0u8VkoKGnnxQgpyrna4MbFT47TeoTvCKIkEibO4XMTxh3vdiCJNanTcTooDIBQpNa1QCnsdT0rwpF18HfhimsEAk_ALhfbxq7S975Vppm_kF2rYGHlqyNX4xp4XPFKTE8ZSZAnEmHyfWvUjCHe8o5WNlt-lwVdm2rLxtEmnYsUPe8wTRHmC5EAJH-ibgKHRkhOB5StAoci7Jx0kYY9BMgwVPv6TuTUyXceujTQh40CvMo9xzXO1Jm7uAn3EppvW9PviJusC_jXPq8XnBx18I9laXoVOgmSnIt6YmmuA5lAbEAcEeTMMxCtqHx_iR3A1VMyI2AjiVqCHxrilGIEM5aRBWRxrI9mWCmg6jU-f5_r6cjOfQwga_UYJ2Le7lRqnwxlybdi14aOAYYgRZdnlLbaj3lyjuGGcsCAWFxK0NwD8JfL819rii_DFB2Sp6JvG_jW4i64RYpQV2f12Ya6nyERn7aLF7J9Z-VCu-d46TSAMsN-OedsHdudf2UALawZhOWvYaCwJBJorCNnSpXbtpmnlhHpX3g8XjueAaR9fmhDkDAOpto3MbRXo1V-rBAmfRPbceu4jWtLCgx0Gb5lCu5YlcjhpEQckXJUuzJ1XG4VOyeSIyjXyDNfbF9uZwoKxBoDqo1JlyKVfMIlcGIn-SyFfg1i5xF6PzfpI5ovqMb1jEVadSYYsFm1I517t6qYKy4SCpn3S4JNaoIPJnZ_uHz_kepRmu9JsdObQ-Tx-nlEjNpMAhUmo50ovKstF8539QfJBXD9tCvLE6tjunLXCzttLmMUDLYbZFPQDRZ16WICzBfB4gD62xT4GNjzmuCUlIxpck-6TDhV18dCFD3LMZM8MxLz6mFRqSznNaDHbAprPcwDzlFDD7bVzc3wy1eegLlrIR_u8Y7kgOtVDDNX6zPHRc2LI_pdeJ1UT7ZytRdvJXJoPuT843JDPigfDmDlyzYE6GJv8-qMuRy_GguoaRaa1xIucyivVfVuahO1LOm6fGX__OJ0MPbCpxttXj8YURhI3P-QnhxP2UaEjMGxSoohN8uW9WfZWNWQmdLUrr0YwXDieFqBhMxrxXWSHvJ04qAYwpg_IZS_uCOdgV4LX0TCd03fWXnu21_MJreYbAsyptmmqRpM4JHxjq1ipwjja5k6FUOTShxlKpseflxeUhVasEzlrND9YCs65Lxw6S-IZAIq5bRrtJ_FAvDOze01jyfKSnEw7ovKbBOMK304IQ7swvZ8-YleVykCwnac5CKqcagqbpGiCVKbXOs6JQUM2TH_1LWi9VmhZplfPeMIWpnHk_JY2D5oI-h_yNUy57t_eS1SR2SyLdLfWwyxFs3sE8a-XNlKUZq3sTDBRN4I_ia5cb_iSaEx15j73McSAROfGNk8a5Zf-0KXLxlclwBneNdbMULAbzIdjjIzkjdNiJZqPxryTCgVwCIPpRai9od7MpiRVbi_SGjczXydduVoacRPp2QZ52XoItq4dHEwNTbcIa2H8LJ6qc_HVcXmRaV_Gia32BOQWiPkMLXKWl_9LiF6N28nYqEfKiU_1DfRWAe5tuk9RKIPxBp66nFrO-TQ_dyOsL5NvckP02jFQOIB17SdJClyEpg9gnVenuEYWMX60HfzNFHG92-eqnB_q4opfYrrJadqYXjf2V_9Bdhhkr_LL8M1cE1fcKfsVSOi7l35e9deGqnod7DiXLCPaKlU7OnglzB6xbeoPSQ_PAxS1WT6rMNIxGI0y8xfBfHnxHW0vvBc7myasVrX_Z8OAN2HnUjT2kFs-CXPUkhY15jwyWTsVeIacwQn0QSll7SYQcf5kNMY8-BWxgiILDq8ffv4x5z0g1G3cmTlELmP_sgMdvZzAS1i3bzSK0LwllvseyoJbuABSW_TpW/https://www.amazon.com/WHOOP-One-Membership-Personalized-Menstrual/dp/B0DY2VVZWZ/ref=sxin_18_sbv_search_btf?content-id=amzn1.sym.c8b39f81-ded8-4d75-80c2-6dfa03cbb699%3Aamzn1.sym.c8b39f81-ded8-4d75-80c2-6dfa03cbb699&cv_ct_cx=fitness+trackers&keywords=fitness+trackers&pd_rd_i=B0DY2VVZWZ&pd_rd_r=21b96011-4711-46a9-a34b-e03b2a5a10b5&pd_rd_w=fEoB4&pd_rd_wg=6seIu&pf_rd_p=c8b39f81-ded8-4d75-80c2-6dfa03cbb699&pf_rd_r=QCCPR5JCYGFHDMA4YGBP&qid=1763536933&sbo=RZvfv%2F%2FHxDF%2BO5021pAnSA%3D%3D&sr=1-1-5190daf0-67e3-427c-bea6-c72c1df98776#customerReviews", "title": "WHOOP 5.0/MG Activity Tracker - 12 Month Membership - Health and Fitness Wearable \u2013 24/7 Activity and Sleep Tracker, Personalized Coaching, Menstrual Cycle Insights \u2013 14+ Days Battery Life", "features": "About this item\nEVERYTHING YOU NEED IS INCLUDED: Your WHOOP purchase includes a 12-month WHOOP One membership, a WHOOP 5.0 device, a CoreKnit band, and a corded Basic Charger.\nCONTINUOUS MONITORING: WHOOP monitors your most important metrics with lab-level accuracy, including heart rate, heart rate variability, sleep, menstrual cycle, and VO2 max\u2014providing 24/7 insights to optimize fitness, recovery, and overall health.\nUNDERSTAND THE IMPACT OF YOUR HABITS: Capture 160+ daily behaviors like training, diet, consistent wake time, stress levels, and more with the WHOOP Journal to understand how habits help or hurt your recovery.\nPERSONALIZED GUIDANCE WITH WHOOP COACH: Get daily sleep, strain, and recovery recommendations to maximize your performance, as well as AI-powered responses to your health and fitness questions.\nSTAY CHARGED FOR 14+ DAYS: Plug in to power up with the corded Basic Charger, made for fast charging and longer battery life\u2014or, add the waterproof* Wireless PowerPack to your purchase.", "integerPartOfPrice": "179\n.", "decimalPartOfPrice": "00"}
-]
+
+import os
+import json
+import glob
+import datetime
 
 from src.analysis import IoTClassification, EntityAnalysis, RelationshipAnalysis
 
+HTML_DUMPS_DIR = "data/html_dumps"
+OUTPUT_DIR = "data/triplets"
+
+
+def load_products(path):
+    """Load the product records from a single JSONL dump file."""
+    products = []
+    with open(path, "r", encoding="utf-8") as f:
+        for line_number, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                products.append(json.loads(line))
+            except json.JSONDecodeError as e:
+                print(f"Skipping malformed line {line_number} in {path}: {e}")
+    return products
+
 
 def main():
-    print("Inside of index")
+    dump_files = glob.glob(os.path.join(HTML_DUMPS_DIR, "**", "*.jsonl"), recursive=True)
+    print(f"Found {len(dump_files)} dump files in {HTML_DUMPS_DIR}")
 
-    # 1 Scrape content, we are using the products above as a place holder
+    iot_classification = IoTClassification()
+    entity_analysis = EntityAnalysis()
+    relationship_analysis = RelationshipAnalysis()
 
-    # 2 Determine if the scraped content is relevant to our task
-    iotClassification = IoTClassification()
-    entityAnalysis = EntityAnalysis()
-    relationshipAnalysis = RelationshipAnalysis()
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    output_path = f"{OUTPUT_DIR}/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.jsonl"
 
-    for product in products:
-        print("Product Name: ", product['title'])
-        # TODO: DO we only want to give a product name or a description and etc. as well?
-        result = iotClassification.classify(product["title"])
-        
-        print("Classification: ", result)
+    written = 0
 
-        # 3 If it is marked as Iot, analyze it
-        if result == "IOT":
-            entities = entityAnalysis.analyze(product)
-            print(entities)
-            if entities:
-                relationship = relationshipAnalysis.analyze(entities)
-                print(relationship)
+    with open(output_path, "w", encoding="utf-8") as out:
+        for dump_file in dump_files[:1]:
+            print(f"Processing {dump_file}")
 
-    # 4 draw relationshiops from the entities extracted
+            for product in load_products(dump_file):
+                title = product.get("title", "").strip()
+                if not title:
+                    continue
 
-if __name__ =="__main__":
+                print("Product Name: ", title)
+
+                try:
+                    classification = iot_classification.classify(title)
+                    print("Classification: ", classification)
+                    if classification.strip() != "IOT":
+                        continue
+
+                    # Keep the prompt focused on the descriptive fields; the raw
+                    # Amazon URLs are thousands of characters of tracking tokens.
+                    entities = entity_analysis.analyze({
+                        "product_name": title,
+                        "about_item": product.get("features", ""),
+                    })
+                    print("Entities: ", entities)
+                    if not entities or not entities.get("entities"):
+                        continue
+
+                    relationships = relationship_analysis.analyze(entities)
+                    print("Relationships: ", relationships)
+                    if not relationships or not relationships.get("triples"):
+                        continue
+                except Exception as e:
+                    print(f"Analysis failed for '{title}': {e}")
+                    continue
+
+                for triple in relationships["triples"]:
+                    # The model does not always respect the schema, so treat
+                    # each triple as untrusted and skip malformed ones.
+                    try:
+                        record = {
+                            "triple": [
+                                [triple["subject"]["type"], triple["subject"]["value"]],
+                                triple["predicate"],
+                                [triple["object"]["type"], triple["object"]["value"]],
+                            ],
+                            "metadata": product,
+                        }
+                    except (KeyError, TypeError) as e:
+                        print(f"Skipping malformed triple {triple}: {e}")
+                        continue
+                    out.write(json.dumps(record, ensure_ascii=False) + "\n")
+                    written += 1
+
+    print(f"Wrote {written} triples to {output_path}")
+
+
+if __name__ == "__main__":
     main()
