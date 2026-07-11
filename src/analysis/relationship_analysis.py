@@ -18,7 +18,7 @@ class TriplesResponse(TypedDict):
 class RelationshipAnalysis:
 
     def __init__(self):
-        self.llm = ChatOllama(model="gemma3:4b")
+        self.llm = ChatOllama(model="gemma3:27b")
         self.prompt = PromptTemplate.from_template(
             """
             You are a data engineer specialized in constructing knowledge graphs. Given a set of extracted entities from an e-commerce 

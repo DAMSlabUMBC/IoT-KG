@@ -4,21 +4,19 @@ from urllib.parse import urljoin
 
 from src.configs import *
 from playwright.sync_api import sync_playwright
+from src.helpers.browser import new_stealth_page
 from src.helpers.snake_case import to_snake_case
-
-# CONFIGS = {
-#     "amazon": AMAZON_PRODUCT_URL_SELECTOR, 
-#     "best_buy": BEST_BUY_PRODUCT_URL_SELECTOR,
-#     "costco": COSTCO_PRODUCT_URL_SELECTOR,
-#     "home_depot": HOME_DEPOT_PRODUCT_URL_SELECTOR,
-#     "sams_club": SAMS_CLUB_PRODUCT_URL_SELECTOR,
-#     "target": TARGET_PRODUCT_URL_SELECTOR,
-#     "walmart": WALMART_PRODUCT_URL_SELECTOR,
-# }
 
 CONFIGS = {
     "amazon": AMAZON_PRODUCT_URL_SELECTOR, 
+    # "best_buy": BEST_BUY_PRODUCT_URL_SELECTOR,
+    # "costco": COSTCO_PRODUCT_URL_SELECTOR,
+    # "home_depot": HOME_DEPOT_PRODUCT_URL_SELECTOR,
+    # "sams_club": SAMS_CLUB_PRODUCT_URL_SELECTOR,
+    # "target": TARGET_PRODUCT_URL_SELECTOR,
+    # "walmart": WALMART_PRODUCT_URL_SELECTOR,
 }
+
 
 def slow_scroll(page, step=200, delay=500):
     scrolled = 0
@@ -71,8 +69,8 @@ def scrape_product_urls(config_key):
         browser = None
         try:
             browser = p.firefox.launch(headless=False)
-            
-            page = browser.new_page()
+
+            page = new_stealth_page(browser)
 
             page.goto(selector["home_url"], wait_until="domcontentloaded")
             page.wait_for_timeout(7000)
@@ -108,7 +106,8 @@ def scrape_product_urls(config_key):
         except Exception as e:
             raise Exception("Error scraping product urls: ", e)
         finally:
-            browser.close()
+            if browser is not None:
+                browser.close()
 
 if __name__ == "__main__":
     for key in CONFIGS:

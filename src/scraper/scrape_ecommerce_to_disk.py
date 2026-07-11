@@ -18,9 +18,9 @@ import datetime
 import argparse
 
 from playwright.sync_api import sync_playwright
-from playwright_stealth import stealth_sync
 
 from src.configs import AMAZON_SELECTOR, BEST_BUY_SELECTOR, COSTCO_SELECTOR, TARGET_SELECTOR, WALMART_SELECTOR
+from src.helpers.browser import new_stealth_page
 
 ITEM = "robot_vacuums"
 
@@ -40,8 +40,7 @@ def scrape_to_disk(urls: list[str], config: str):
             browser = None
             try:
                 browser =  p.firefox.launch(headless=False)
-                page = browser.new_page()
-                stealth_sync(page)
+                page = new_stealth_page(browser)
 
                 with open(f"{output_dir}/{datetime.datetime.now().strftime('%Y-%m-%d')}.jsonl", "a", encoding="utf-8") as f:
                     for url in urls:
@@ -70,7 +69,8 @@ def scrape_to_disk(urls: list[str], config: str):
             except Exception as e:
                 raise Exception("Error scraping to disk: ", e)
             finally:
-                browser.close()
+                if browser is not None:
+                    browser.close()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Scrape e-commerce websites')

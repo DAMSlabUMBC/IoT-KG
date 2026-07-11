@@ -14,9 +14,13 @@ class SearchValidator:
         self.query_formatter = QueryFormatter()
         self.corruptor = TripleCorruptor(self.query_formatter)
     
+    def close(self):
+        """Close the shared browser session."""
+        self.search_client.close()
+
     def validate(
-        self, 
-        triple: Triple, 
+        self,
+        triple: Triple,
     ) -> float:
         """Validate a triple by comparing search results with corrupted variants."""
 
