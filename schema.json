@@ -1,0 +1,1332 @@
+{
+    "vertices": [
+        "account",
+        "activity",
+        "advertising",
+        "app",
+        "appgroup",
+        "application",
+        "assistant",
+        "audience",
+        "behaviordata",
+        "billingdata",
+        "bot",
+        "businesspurpose",
+        "certification",
+        "channel",
+        "communication",
+        "communicationtype",
+        "company",
+        "condition",
+        "consent",
+        "content",
+        "control",
+        "credential",
+        "credentialfield",
+        "data",
+        "dataclass",
+        "datafield",
+        "dataform",
+        "device",
+        "document",
+        "entity",
+        "event",
+        "experience",
+        "feature",
+        "field",
+        "financialdata",
+        "framework",
+        "frameworkprinciple",
+        "geo",
+        "identifier",
+        "incident",
+        "inference",
+        "info",
+        "law",
+        "legalmechanism",
+        "location",
+        "manufacturer",
+        "mediatype",
+        "method",
+        "metric",
+        "networkidentifier",
+        "observation",
+        "option",
+        "organization",
+        "paymentdata",
+        "performancedata",
+        "person",
+        "platform",
+        "policy",
+        "privacyPolicy",
+        "privacyaction",
+        "privacyissue",
+        "privacypolicy",
+        "privacyrequest",
+        "privacyright",
+        "process",
+        "product",
+        "program",
+        "protocol",
+        "purpose",
+        "regulation",
+        "request",
+        "research",
+        "retentionreason",
+        "right",
+        "role",
+        "safeguard",
+        "securityevent",
+        "sensor",
+        "service",
+        "servicemetric",
+        "setting",
+        "statement",
+        "status",
+        "system",
+        "systemdata",
+        "technology",
+        "telemetry",
+        "threat",
+        "tool",
+        "trackingdata",
+        "trackingtechnology",
+        "type",
+        "usagedata",
+        "user",
+        "webpage",
+        "website"
+    ],
+    "edges": [
+        {
+            "name": "accepts",
+            "from": [
+                "person"
+            ],
+            "to": [
+                "privacypolicy"
+            ]
+        },
+        {
+            "name": "accessSensor",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "sensor"
+            ]
+        },
+        {
+            "name": "acquires",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "actsas",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "role"
+            ]
+        },
+        {
+            "name": "adheresto",
+            "from": [
+                "organization"
+            ],
+            "to": [
+                "frameworkprinciple"
+            ]
+        },
+        {
+            "name": "analyzes",
+            "from": [
+                "company",
+                "website"
+            ],
+            "to": [
+                "behaviordata",
+                "data"
+            ]
+        },
+        {
+            "name": "anonymizedwhen",
+            "from": [
+                "data"
+            ],
+            "to": [
+                "condition"
+            ]
+        },
+        {
+            "name": "anonymizesdata",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "policy"
+            ]
+        },
+        {
+            "name": "appliesto",
+            "from": [
+                "policy",
+                "privacypolicy",
+                "regulation"
+            ],
+            "to": [
+                "appgroup",
+                "company",
+                "organization",
+                "platform",
+                "service",
+                "website"
+            ]
+        },
+        {
+            "name": "assists",
+            "from": [
+                "process"
+            ],
+            "to": [
+                "process"
+            ]
+        },
+        {
+            "name": "avoids",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "process"
+            ]
+        },
+        {
+            "name": "buildsprofile",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "canInfer",
+            "from": [
+                "inference",
+                "observation"
+            ],
+            "to": [
+                "inference"
+            ]
+        },
+        {
+            "name": "canaccess",
+            "from": [
+                "person"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "candelete",
+            "from": [
+                "person"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "canrestrict",
+            "from": [
+                "person"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "canupdate",
+            "from": [
+                "person"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "captures",
+            "from": [
+                "sensor"
+            ],
+            "to": [
+                "observation"
+            ]
+        },
+        {
+            "name": "classifiedas",
+            "from": [
+                "data"
+            ],
+            "to": [
+                "dataclass"
+            ]
+        },
+        {
+            "name": "collects",
+            "from": [
+                "app",
+                "company",
+                "service",
+                "trackingtechnology",
+                "website"
+            ],
+            "to": [
+                "behaviordata",
+                "data",
+                "networkidentifier",
+                "systemdata",
+                "telemetry",
+                "trackingdata",
+                "usagedata"
+            ]
+        },
+        {
+            "name": "collectswithconsent",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "communicatesabout",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "securityevent"
+            ]
+        },
+        {
+            "name": "compatibleWith",
+            "from": [
+                "device"
+            ],
+            "to": [
+                "application",
+                "device"
+            ]
+        },
+        {
+            "name": "complieswith",
+            "from": [
+                "company",
+                "organization",
+                "program"
+            ],
+            "to": [
+                "framework",
+                "law"
+            ]
+        },
+        {
+            "name": "conducts",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "activity"
+            ]
+        },
+        {
+            "name": "connectsto",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "application",
+                "device",
+                "feature"
+            ]
+        },
+        {
+            "name": "contacts",
+            "from": [
+                "person"
+            ],
+            "to": [
+                "organization"
+            ]
+        },
+        {
+            "name": "contactsuservia",
+            "from": [
+                "service"
+            ],
+            "to": [
+                "channel"
+            ]
+        },
+        {
+            "name": "crawls",
+            "from": [
+                "bot"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "customizes",
+            "from": [
+                "company",
+                "website"
+            ],
+            "to": [
+                "experience"
+            ]
+        },
+        {
+            "name": "deletedwhen",
+            "from": [
+                "data"
+            ],
+            "to": [
+                "condition"
+            ]
+        },
+        {
+            "name": "deletesdata",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "policy"
+            ]
+        },
+        {
+            "name": "delivers",
+            "from": [
+                "platform",
+                "website"
+            ],
+            "to": [
+                "service"
+            ]
+        },
+        {
+            "name": "denies",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "request"
+            ]
+        },
+        {
+            "name": "developedBy",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "manufacturer"
+            ]
+        },
+        {
+            "name": "disclosedas",
+            "from": [
+                "data"
+            ],
+            "to": [
+                "dataform"
+            ]
+        },
+        {
+            "name": "disclosedto",
+            "from": [
+                "data"
+            ],
+            "to": [
+                "organization"
+            ]
+        },
+        {
+            "name": "discloses",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "disclosesto",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "organization"
+            ]
+        },
+        {
+            "name": "displays",
+            "from": [
+                "setting"
+            ],
+            "to": [
+                "info"
+            ]
+        },
+        {
+            "name": "doesnotcollect",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "doesnotcollectwithoutconsent",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "doesnotdiscriminate",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "person"
+            ]
+        },
+        {
+            "name": "doesnotsell",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "doesnotshareformarketing",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "doesnotuse",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "enables",
+            "from": [
+                "tool",
+                "webpage"
+            ],
+            "to": [
+                "privacyaction",
+                "process"
+            ]
+        },
+        {
+            "name": "ensuressecurityof",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "system"
+            ]
+        },
+        {
+            "name": "facilitates",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "event"
+            ]
+        },
+        {
+            "name": "follows",
+            "from": [
+                "privacyPolicy"
+            ],
+            "to": [
+                "regulation"
+            ]
+        },
+        {
+            "name": "governedby",
+            "from": [
+                "website"
+            ],
+            "to": [
+                "privacypolicy"
+            ]
+        },
+        {
+            "name": "handles",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "hasPolicy",
+            "from": [
+                "application",
+                "device",
+                "manufacturer"
+            ],
+            "to": [
+                "privacyPolicy"
+            ]
+        },
+        {
+            "name": "hasSensor",
+            "from": [
+                "device"
+            ],
+            "to": [
+                "sensor"
+            ]
+        },
+        {
+            "name": "hasTopic",
+            "from": [
+                "research"
+            ],
+            "to": [
+                "application",
+                "device",
+                "observation",
+                "process",
+                "sensor"
+            ]
+        },
+        {
+            "name": "haspolicy",
+            "from": [
+                "manufacturer"
+            ],
+            "to": [
+                "policy"
+            ]
+        },
+        {
+            "name": "hasrightto",
+            "from": [
+                "person"
+            ],
+            "to": [
+                "privacyright"
+            ]
+        },
+        {
+            "name": "hasservice",
+            "from": [
+                "manufacturer"
+            ],
+            "to": [
+                "service"
+            ]
+        },
+        {
+            "name": "hassoftware",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "application"
+            ]
+        },
+        {
+            "name": "hasstatement",
+            "from": [
+                "manufacturer"
+            ],
+            "to": [
+                "statement"
+            ]
+        },
+        {
+            "name": "hasvoiceassistant",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "assistant"
+            ]
+        },
+        {
+            "name": "holds",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "certification"
+            ]
+        },
+        {
+            "name": "identifies",
+            "from": [
+                "identifier"
+            ],
+            "to": [
+                "device"
+            ]
+        },
+        {
+            "name": "implements",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "safeguard"
+            ]
+        },
+        {
+            "name": "improves",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "servicemetric"
+            ]
+        },
+        {
+            "name": "includes",
+            "from": [
+                "account",
+                "appgroup",
+                "communication",
+                "company",
+                "credential",
+                "data",
+                "financialdata",
+                "systemdata",
+                "telemetry"
+            ],
+            "to": [
+                "app",
+                "behaviordata",
+                "communicationtype",
+                "credential",
+                "credentialfield",
+                "data",
+                "datafield",
+                "device",
+                "event",
+                "field",
+                "financialdata",
+                "geo",
+                "identifier",
+                "info",
+                "mediatype",
+                "metric",
+                "networkidentifier",
+                "product",
+                "service",
+                "status",
+                "telemetry"
+            ]
+        },
+        {
+            "name": "informabout",
+            "from": [
+                "organization"
+            ],
+            "to": [
+                "product",
+                "service"
+            ]
+        },
+        {
+            "name": "integrateswith",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "device",
+                "service"
+            ]
+        },
+        {
+            "name": "investigates",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "incident"
+            ]
+        },
+        {
+            "name": "is",
+            "from": [
+                "data"
+            ],
+            "to": [
+                "type"
+            ]
+        },
+        {
+            "name": "isa",
+            "from": [
+                "bot"
+            ],
+            "to": [
+                "type"
+            ]
+        },
+        {
+            "name": "linksto",
+            "from": [
+                "account",
+                "service",
+                "website"
+            ],
+            "to": [
+                "application",
+                "entity",
+                "service",
+                "website"
+            ]
+        },
+        {
+            "name": "manages",
+            "from": [
+                "company",
+                "person"
+            ],
+            "to": [
+                "account",
+                "setting"
+            ]
+        },
+        {
+            "name": "manufacturedBy",
+            "from": [
+                "device",
+                "sensor"
+            ],
+            "to": [
+                "manufacturer"
+            ]
+        },
+        {
+            "name": "monitors",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "process"
+            ]
+        },
+        {
+            "name": "mustcomplywith",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "law"
+            ]
+        },
+        {
+            "name": "notifies",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "user"
+            ]
+        },
+        {
+            "name": "notresponsiblefor",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "entity"
+            ]
+        },
+        {
+            "name": "operateindependentlyfrom",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "system"
+            ]
+        },
+        {
+            "name": "optsout",
+            "from": [
+                "person"
+            ],
+            "to": [
+                "communication"
+            ]
+        },
+        {
+            "name": "performs",
+            "from": [
+                "application",
+                "device"
+            ],
+            "to": [
+                "process"
+            ]
+        },
+        {
+            "name": "personalizes",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "experience"
+            ]
+        },
+        {
+            "name": "prevents",
+            "from": [
+                "safeguard"
+            ],
+            "to": [
+                "threat"
+            ]
+        },
+        {
+            "name": "processedby",
+            "from": [
+                "data"
+            ],
+            "to": [
+                "organization"
+            ]
+        },
+        {
+            "name": "processes",
+            "from": [
+                "company",
+                "organization"
+            ],
+            "to": [
+                "billingdata",
+                "data",
+                "paymentdata"
+            ]
+        },
+        {
+            "name": "processesrequestsfor",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "privacyaction"
+            ]
+        },
+        {
+            "name": "protects",
+            "from": [
+                "company",
+                "control",
+                "regulation"
+            ],
+            "to": [
+                "company",
+                "data",
+                "person",
+                "website"
+            ]
+        },
+        {
+            "name": "provides",
+            "from": [
+                "company",
+                "organization",
+                "platform",
+                "product",
+                "website"
+            ],
+            "to": [
+                "advertising",
+                "app",
+                "content",
+                "document",
+                "info",
+                "option",
+                "right"
+            ]
+        },
+        {
+            "name": "providesaccessto",
+            "from": [
+                "tool"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "receives",
+            "from": [
+                "company",
+                "organization"
+            ],
+            "to": [
+                "data",
+                "performancedata",
+                "usagedata"
+            ]
+        },
+        {
+            "name": "references",
+            "from": [
+                "research"
+            ],
+            "to": [
+                "research"
+            ]
+        },
+        {
+            "name": "requests",
+            "from": [
+                "user"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "requiredtoprotect",
+            "from": [
+                "organization"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "requiresSensor",
+            "from": [
+                "process"
+            ],
+            "to": [
+                "sensor"
+            ]
+        },
+        {
+            "name": "requiresconsentfor",
+            "from": [
+                "manufacturer"
+            ],
+            "to": [
+                "purpose"
+            ]
+        },
+        {
+            "name": "resolves",
+            "from": [
+                "company",
+                "organization"
+            ],
+            "to": [
+                "privacyissue"
+            ]
+        },
+        {
+            "name": "respondsto",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "privacyrequest"
+            ]
+        },
+        {
+            "name": "responsiblefor",
+            "from": [
+                "organization"
+            ],
+            "to": [
+                "process"
+            ]
+        },
+        {
+            "name": "retainedfor",
+            "from": [
+                "data"
+            ],
+            "to": [
+                "retentionreason"
+            ]
+        },
+        {
+            "name": "retains",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "retainsdata",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "policy"
+            ]
+        },
+        {
+            "name": "retainsdatafor",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "policy"
+            ]
+        },
+        {
+            "name": "safeguards",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "process"
+            ]
+        },
+        {
+            "name": "sends",
+            "from": [
+                "company",
+                "manufacturer"
+            ],
+            "to": [
+                "communication",
+                "data"
+            ]
+        },
+        {
+            "name": "shares",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "shareswith",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "entity"
+            ]
+        },
+        {
+            "name": "showInference",
+            "from": [
+                "inference"
+            ],
+            "to": [
+                "research"
+            ]
+        },
+        {
+            "name": "statesInPolicy",
+            "from": [
+                "observation",
+                "process",
+                "sensor"
+            ],
+            "to": [
+                "privacyPolicy"
+            ]
+        },
+        {
+            "name": "stores",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "supports",
+            "from": [
+                "geo"
+            ],
+            "to": [
+                "service"
+            ]
+        },
+        {
+            "name": "tracks",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "user"
+            ]
+        },
+        {
+            "name": "transferredto",
+            "from": [
+                "data"
+            ],
+            "to": [
+                "location",
+                "organization"
+            ]
+        },
+        {
+            "name": "transfers",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "transfersto",
+            "from": [
+                "organization"
+            ],
+            "to": [
+                "organization"
+            ]
+        },
+        {
+            "name": "treatedas",
+            "from": [
+                "data"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "updates",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "policy",
+                "privacypolicy"
+            ]
+        },
+        {
+            "name": "usedfor",
+            "from": [
+                "data"
+            ],
+            "to": [
+                "businesspurpose",
+                "purpose"
+            ]
+        },
+        {
+            "name": "uses",
+            "from": [
+                "company",
+                "feature",
+                "organization",
+                "platform",
+                "website"
+            ],
+            "to": [
+                "control",
+                "data",
+                "legalmechanism",
+                "method",
+                "process",
+                "trackingtechnology"
+            ]
+        },
+        {
+            "name": "usesdatafor",
+            "from": [
+                "application",
+                "manufacturer"
+            ],
+            "to": [
+                "purpose"
+            ]
+        },
+        {
+            "name": "usesprotocol",
+            "from": [
+                "application"
+            ],
+            "to": [
+                "protocol"
+            ]
+        },
+        {
+            "name": "validates",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "data"
+            ]
+        },
+        {
+            "name": "verifies",
+            "from": [
+                "company"
+            ],
+            "to": [
+                "process"
+            ]
+        },
+        {
+            "name": "visibleto",
+            "from": [
+                "data"
+            ],
+            "to": [
+                "audience"
+            ]
+        },
+        {
+            "name": "withdraws",
+            "from": [
+                "user"
+            ],
+            "to": [
+                "consent"
+            ]
+        }
+    ]
+}
