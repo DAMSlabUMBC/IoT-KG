@@ -1,9 +1,8 @@
 AMAZON_SELECTOR = {
-  "title": "#productTitle",
-  "features": "#feature-bullets",
-  "integerPartOfPrice": ".a-price-whole", 
-  "decimalPartOfPrice": ".a-price-fraction",
-  "description": "#feature-bullets ul",
+  "title": "span#productTitle",
+  "features": "div#feature-bullets",
+  "integerPartOfPrice": "span.a-price-whole", 
+  "decimalPartOfPrice": "span.a-price-fraction",
   "images": "#altImages img"
 }
 

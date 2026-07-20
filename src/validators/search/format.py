@@ -71,8 +71,22 @@ class QueryFormatter:
             for tmpl in templates
         ]
     
+    # Generic fallback so triples with unknown predicates (the LLM invents
+    # them freely) are still searchable instead of crashing.
+    DEFAULT_TEMPLATES = [
+        '"{subject} {object}"',
+        '"{subject} is associated with {object}"',
+    ]
+
     def _get_templates(self, triple: Triple) -> List[str]:
         key = (triple.predicate, triple.subject.node_type, triple.object.node_type)
         if key in self.TEMPLATES:
             return self.TEMPLATES[key]
-        
+
+        # Entries keyed (predicate, None, None) are wildcards: they apply to
+        # the predicate regardless of the subject/object node types.
+        wildcard = (triple.predicate, None, None)
+        if wildcard in self.TEMPLATES:
+            return self.TEMPLATES[wildcard]
+
+        return self.DEFAULT_TEMPLATES

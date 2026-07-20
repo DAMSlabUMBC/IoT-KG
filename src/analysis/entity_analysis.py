@@ -9,7 +9,7 @@ class Entities(TypedDict):
 
 class EntityAnalysis:
     def __init__(self):
-        self.llm = ChatOllama(model="gemma3:4b")
+        self.llm = ChatOllama(model="gemma3:27b")
         # TODO: Decide if we need to define an ontology here in this prompt
         self.prompt = PromptTemplate.from_template(
             """

@@ -6,6 +6,7 @@ from typing import List
 from typing_extensions import Annotated, TypedDict
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from crawl4ai import AsyncWebCrawler
 from crawl4ai.async_configs import BrowserConfig, CrawlerRunConfig
 
@@ -36,6 +37,7 @@ class RAGValidator:
         )
         self.browser_config = BrowserConfig()
         self.run_config = CrawlerRunConfig()
+        self._executor = ThreadPoolExecutor(max_workers=1)
         self.prompt = PromptTemplate.from_template(
             """
             You are a Knowledge Graph Engineer specialized in evaluating the truthfulness of a triple.
@@ -78,11 +80,32 @@ class RAGValidator:
             """
         )
 
-    def validate(self, triple: str) -> float:
+    def validate(self, triple: str) -> StructuredOutput:
         """Validate a triple by comparing query to triple search results"""
 
-        urls = self._search_urls(triple)
-        docs = asyncio.run(self._scrape(urls))
+        # The ddgs backend raises not just on rate limits but on any query
+        # with zero results, so treat a failed search like an empty one.
+        try:
+            urls = self._search_urls(triple)
+        except Exception as e:
+            print(f"Search failed for triple {triple}: {e}")
+            urls = []
+
+        # Run the scrape in its own thread: the search validator keeps a sync
+        # Playwright session (and its event loop) alive on the main thread,
+        # so asyncio.run() cannot be called there.
+        docs = []
+        if urls:
+            docs = self._executor.submit(asyncio.run, self._scrape(urls)).result()
+
+        if not docs:
+            print(f"No sources could be scraped for triple: {triple}")
+            return StructuredOutput(
+                truthfulness=False,
+                confidence="Low Confidence",
+                reasoning="No external sources could be retrieved to verify this triple.",
+                sources="",
+            )
 
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         all_splits = text_splitter.split_documents(docs)
@@ -98,19 +121,29 @@ class RAGValidator:
         print("Response: ", response)
         return response
 
-    def _search_urls(self, triple: str) -> List[str]:
+    def _search_urls(self, triple: str) -> List[dict]:
         return self.search.invoke(triple)
-    
-    async def _scrape(self, urls: List[str]) -> List[Document]:
+
+    async def _scrape(self, urls: List[dict]) -> List[Document]:
+
+        # Search results are untrusted: entries can be missing a link
+        # entirely or carry an empty one, and crawl4ai rejects those.
+        links = [url.get("link") for url in urls]
+        links = [link for link in links if link and link.startswith("http")]
+        if not links:
+            return []
 
         docs: List[Document] = []
 
         async with AsyncWebCrawler(config=self.browser_config) as crawler:
-            for url in urls:
-                text = await crawler.arun(
-                    url=url["link"],
-                    config=self.run_config
-                )
-                docs.append(Document(page_content=text.markdown, metadata={"source": url}))
+            try:
+                results = await crawler.arun_many(links, config=self.run_config)
+            except Exception as e:
+                print(f"Scrape failed for {links}: {e}")
+                return []
+
+            for result in results:
+                if result.success and result.markdown:
+                    docs.append(Document(page_content=result.markdown, metadata={"source": result.url}))
 
         return docs

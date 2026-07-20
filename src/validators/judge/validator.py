@@ -27,7 +27,7 @@ class FinalReport(TypedDict):
 class JudgeValidator:
     def __init__(self):
         self.models: Dict[str, ChatOllama] = {
-            "gemma3:4b": ChatOllama(model="gemma3:4b"),
+            "gemma3:27b": ChatOllama(model="gemma3:27b"),
             "qwen3:8b": ChatOllama(model="qwen3:8b"),
             "llama3.1:8b": ChatOllama(model="llama3.1:8b"),
             "mistral:7b": ChatOllama(model="mistral:7b"),
