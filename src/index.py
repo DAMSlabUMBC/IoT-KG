@@ -1,52 +1,109 @@
 # This is the file to execute for analysis
 
 """
-1. Know what to search by finding keywords for IoT devices
-2. Search the keywords on all ecommerce
-3. Save the urls
+Reads scraped product records from data/html_dumps one file at a time,
+classifies each product as IoT or not, extracts IoT entities from the IoT
+products, forms relationship triples from those entities, and writes the
+triples to data/triplets.
 
-4. Pass the urls into our scraper x
-5. Before passing it into analysis, we want to filter out all NON iot content that we've scraped
-5. Pass the scrape results into our analysis pipeline
-
+Each output line is a JSON object containing the triple plus the html dump
+record it was made from (which carries the product URL) as metadata.
 """
 
+import os
+import json
+import glob
+import datetime
 
-products = [
-    {'product_name': 'Garmin Forerunner 55, White', 'manufacturer': 'By Garmin', 'highlights': 'Highlights|Tracks time, distance, pace, and speed during runs or walks with built-in GPS|Monitors overall health and wellness with wrist-based heart rate and more|Includes various built-in activity profiles for a comprehensive fitness experience|Provides up to 2 weeks of battery life on a single charge|Less charging means more time focusing on your fitness goals|Read more', 'about_item': "Introducing the Forerunner 55 GPS Smartwatch|Embrace your inner athlete with the Forerunner 55, an easy-to-use GPS smartwatch designed for runners of all skill levels. This device is particularly beneficial for those new to running, providing an effortless way to track stats and achieve fitness goals. With just a simple press of a button, you can start your run or walk and monitor your time, distance, speed, pace, and heart rate data directly from your wrist.|Advanced Running Data and Daily Suggested Workouts|Offers detailed running data to help you understand and improve your performance. It provides daily suggested workouts tailored to your fitness level and training history, helping you to stay motivated and consistently challenge yourself. Whether you're training for a marathon or just looking to stay active, the Forerunner 55 is your perfect fitness companion.|Additional Built-in Sports Apps|Enjoy additional built-in sports apps, expanding its functionality beyond just running. This makes it a versatile tool for tracking a variety of activities and sports, ensuring you have all the data you need to reach your fitness goals. Experience the convenience and power of comprehensive fitness tracking with the Forerunner 55 GPS smartwatch.|Enjoy complimentary Apple Service Trials with this purchase.|Redemption instructions will be emailed post purchase. Terms apply.|If the item details above aren’t accurate or complete, we want to know about it.Report incorrect product info", 'product_details': "Introducing the Forerunner 55 GPS Smartwatch|Embrace your inner athlete with the Forerunner 55, an easy-to-use GPS smartwatch designed for runners of all skill levels. This device is particularly beneficial for those new to running, providing an effortless way to track stats and achieve fitness goals. With just a simple press of a button, you can start your run or walk and monitor your time, distance, speed, pace, and heart rate data directly from your wrist.|Advanced Running Data and Daily Suggested Workouts|Offers detailed running data to help you understand and improve your performance. It provides daily suggested workouts tailored to your fitness level and training history, helping you to stay motivated and consistently challenge yourself. Whether you're training for a marathon or just looking to stay active, the Forerunner 55 is your perfect fitness companion.|Additional Built-in Sports Apps|Enjoy additional built-in sports apps, expanding its functionality beyond just running. This makes it a versatile tool for tracking a variety of activities and sports, ensuring you have all the data you need to reach your fitness goals. Experience the convenience and power of comprehensive fitness tracking with the Forerunner 55 GPS smartwatch.|Enjoy complimentary Apple Service Trials with this purchase.|Redemption instructions will be emailed post purchase. Terms apply.|If the item details above aren’t accurate or complete, we want to know about it.Report incorrect product info", "url": 'https://www.samsclub.com/p/garmin-forerunner-55/P990395099?xid=plp_product_39'},
-    {'product_name': 'Garmin Index BPM Smart Blood Pressure Monitor', 'manufacturer': 'By Garmin', 'highlights': 'HighlightsGet accurate blood pressure readings on a compact all-in-one device, with an adjustable cuff, and create reports|Download the Garmin Connect app to see all the stats you care about in one placeIncludes smart blood pressure monitor and batteries|FDA cleared and clinically validatedRead more', 'about_item': 'Check in with your body more often with the clinically validated, easy-to-use Index™ BPM smart blood pressure monitor (Index BPM is for people 18 years or older. It is not available in all regions). It’s just one more way Garmin helps you see a more complete picture of your health. When used properly, it delivers accurate blood pressure and heart rate readings you can view on the built-in display.|Features|FDA-cleared and clinically validated upper-arm blood pressure monitor Delivers accurate systolic and diastolic blood pressure measurements and heart rate readings when used properly (Index BPM is for people 18 years or older. It is not available in all regions.)\t|Compact, all-in-one device Features an integrated display to view readings and can be taken anywhere.|Readings can be optionally to your accountYour information can be synced to your Garmin Connect account via Wi-Fi technology; view readings, history and trends in the Garmin Connect app on your compatible smartphone.\t\t|Easily create and view reportsCreate 7-day, 4-week and 1-year reports in the Garmin .Connect™ smartphone app and export them to a PDF to share directly with your health care provider via email or in person.\t|Adjustable cuff Fits a wide range of arm sizes (9–17” [22–42 cm] circumference).\t\t|Battery life up to 9 months; includes 4 user-replaceable AAA batteries.\t\t| Enjoy complimentary Apple Service Trials with this purchase.|Redemption instructions will be emailed post purchase. Terms apply.If the item details above aren’t accurate or complete, we want to know about it.Report incorrect product info', 'product_details': 'Check in with your body more often with the clinically validated, easy-to-use Index™ BPM smart blood pressure monitor (Index BPM is for people 18 years or older. It is not available in all regions). It’s just one more way Garmin helps you see a more complete picture of your health. When used properly, it delivers accurate blood pressure and heart rate readings you can view on the built-in display.|Features|FDA-cleared and clinically validated upper-arm blood pressure monitor Delivers accurate systolic and diastolic blood pressure measurements and heart rate readings when used properly (Index BPM is for people 18 years or older. It is not available in all regions.)\t|Compact, all-in-one device Features an integrated display to view readings and can be taken anywhere.|Readings can be optionally to your accountYour information can be synced to your Garmin Connect account via Wi-Fi technology; view readings, history and trends in the Garmin Connect app on your compatible smartphone.\t\t|Easily create and view reportsCreate 7-day, 4-week and 1-year reports in the Garmin .Connect™ smartphone app and export them to a PDF to share directly with your health care provider via email or in person.\t|Adjustable cuff Fits a wide range of arm sizes (9–17” [22–42 cm] circumference).\t\t|Battery life up to 9 months; includes 4 user-replaceable AAA batteries.\t\t| Enjoy complimentary Apple Service Trials with this purchase.|Redemption instructions will be emailed post purchase. Terms apply.If the item details above aren’t accurate or complete, we want to know about it.Report incorrect product info', "url": 'https://www.samsclub.com/p/garmin-index-bpm-smart-blood-pressure-monitor/P990347672?xid=plp_product_3'},
-    {'product_name': 'Garmin Instinct 2 One Size GPS Smartwatch, Graphite', 'manufacturer': 'By Garmin', 'highlights': 'Highlights|Understand your body better with all-day health monitoring features that track your heart rate, sleep, Pulse Ox, respiration and more|Monchrome, Sunlight-visible, Transflective MIP DIsplay|Up to 28 days of battery life|Compatible with iOS and Android devices|Read more', 'about_item': 'Instinct 2|Whatever you do, own it.|The rugged Instinct 2 GPS smartwatch is tough enough to keep up with you, unique enough to fit your style, and small enough to fit your wrist. Do more of what you love with preloaded activity profiles for running, biking, swimming and more. Live the ultimate connected life with smart notifications and Connect IQ compatibility when paired with your compatible smartphone. Understand your body better with all-day health monitoring for energy levels, stress, sleep, Pulse Ox and much more.|Features|Rugged Design|Water-rated to 100 meters, this rugged smartwatch is thermal and shock resistant, plus it features bold colors, high-contrast displays, long battery life and size options that show the world you do things your own way.|Track every Adventure|Whether you’re hiking, mountain biking, trail running or skiing, you’ll have access to multiple global navigation satellite systems (GPS, GLONASS and Galileo) to track in more challenging environments than GPS alone.|ABC Sensors|Navigate your next trail with ABC sensors, including an altimeter for elevation data, barometer to monitor weather and 3-axis electronic compass.|Tracback Routing|Take the guesswork out of your return journey by using this feature to navigate the same route back to your starting point.|Live Connected with Smart Features|Receive emails, texts and alerts right on your watch when paired with your compatible smartphone.|Connect IQ Store|Download custom watch faces, add data fields, and get app and widgets from the Connect IQ store on your compatible smartphone.|Safety and Tracking Features|When your watch and phone are paired, your live location can be sent to your contacts manually or – during select outdoor activities – automatically with built-in incident detection.|Train and Know your Body|Understand your body better with 24/7 health and wellness monitoring features that track your heart rate, sleep, Pulse Ox, respiration and more.|V02 Max|Train smarter with V02 max, an indicator of how you can expect to perform. It even accounts for changes in performance that could be caused by heat or altitude.|Built-In Sports Apps|Do whatever you love with preloaded activity profiles for running, cycling, swimming, strength training, indoor climbing, virtual running, golf, yoga, Pilates and more.|Sleep Score and Advanced Sleep Monitoring|Get a full breakdown of your light, deep and REM sleep stages. View it all on a dedicated widget that includes your sleep score.|Stress and Body Battery Monitoring|Optimize your body’s energy reserves, using heart rate variability, stress, sleep and other data to gauge when you’re ready to be active or may need to rest. Calculate your stress level score to see if you’re having a calm, balanced or stressful day.|Display|The Garmin Instinct 2 has a 0.9” x 0.9” monochrome, sunlight-visible, transflective memory-in-pixel (MIP) color display screen.|What’s Included|This will include the Black Instinct 2 and charging cable. Enjoy complimentary Apple Service Trials with this purchase.|Redemption instructions will be emailed post purchase. Terms apply.If the item details above aren’t accurate or complete, we want to know about it.Report incorrect product info', 'product_details': 'Instinct 2|Whatever you do, own it.|The rugged Instinct 2 GPS smartwatch is tough enough to keep up with you, unique enough to fit your style, and small enough to fit your wrist. Do more of what you love with preloaded activity profiles for running, biking, swimming and more. Live the ultimate connected life with smart notifications and Connect IQ compatibility when paired with your compatible smartphone. Understand your body better with all-day health monitoring for energy levels, stress, sleep, Pulse Ox and much more.|Features|Rugged Design|Water-rated to 100 meters, this rugged smartwatch is thermal and shock resistant, plus it features bold colors, high-contrast displays, long battery life and size options that show the world you do things your own way.|Track every Adventure|Whether you’re hiking, mountain biking, trail running or skiing, you’ll have access to multiple global navigation satellite systems (GPS, GLONASS and Galileo) to track in more challenging environments than GPS alone.|ABC Sensors|Navigate your next trail with ABC sensors, including an altimeter for elevation data, barometer to monitor weather and 3-axis electronic compass.|Tracback Routing|Take the guesswork out of your return journey by using this feature to navigate the same route back to your starting point.|Live Connected with Smart Features|Receive emails, texts and alerts right on your watch when paired with your compatible smartphone.|Connect IQ Store|Download custom watch faces, add data fields, and get app and widgets from the Connect IQ store on your compatible smartphone.|Safety and Tracking Features|When your watch and phone are paired, your live location can be sent to your contacts manually or – during select outdoor activities – automatically with built-in incident detection.|Train and Know your Body|Understand your body better with 24/7 health and wellness monitoring features that track your heart rate, sleep, Pulse Ox, respiration and more.|V02 Max|Train smarter with V02 max, an indicator of how you can expect to perform. It even accounts for changes in performance that could be caused by heat or altitude.|Built-In Sports Apps|Do whatever you love with preloaded activity profiles for running, cycling, swimming, strength training, indoor climbing, virtual running, golf, yoga, Pilates and more.|Sleep Score and Advanced Sleep Monitoring|Get a full breakdown of your light, deep and REM sleep stages. View it all on a dedicated widget that includes your sleep score.|Stress and Body Battery Monitoring|Optimize your body’s energy reserves, using heart rate variability, stress, sleep and other data to gauge when you’re ready to be active or may need to rest. Calculate your stress level score to see if you’re having a calm, balanced or stressful day.|Display|The Garmin Instinct 2 has a 0.9” x 0.9” monochrome, sunlight-visible, transflective memory-in-pixel (MIP) color display screen.|What’s Included|This will include the Black Instinct 2 and charging cable. Enjoy complimentary Apple Service Trials with this purchase.|Redemption instructions will be emailed post purchase. Terms apply.If the item details above aren’t accurate or complete, we want to know about it.Report incorrect product info', "url": 'https://www.samsclub.com/p/garmin-instinct-2-gps-smart-watch-graphite/P03022285?xid=plp_product_40' },
-    {'product_name': 'Garmin Venu 3, Black', 'manufacturer': 'By Garmin', 'highlights': 'Highlights|Delivers up to 14 days of battery life in smartwatch mode and up to 26 hours in GPS mode|Provides an overview of sleep, recovery, daily calendar, and HRV status upon waking up with customizable reports|Tracks various movements with more than 30 preloaded GPS and indoor sports apps|Includes a wheelchair mode that tracks pushes instead of steps, offering preloaded workouts, animated workouts for strength, cardio, HIIT, pilates, yoga, and challenges specific to wheelchair users|Allows making and receiving phone calls directly from the wrist|Read more', 'about_item': 'Discover the Venu 3 Smartwatch|Experience the ultimate on-wrist coach with the Venu 3 smartwatch. This GPS smartwatch is designed to support your goals, whatever they may be. It features a bright, colorful display and boasts up to 14 days of battery life. Purpose-built with advanced health and fitness features, the Venu 3 helps you better understand your body and track your progress towards your goals.|Monitor Your Energy Levels|The Venu 3 smartwatch comes with Body\u202fBattery energy monitoring, providing personalized insights based on sleep, naps, stress, workouts, and more. This feature helps you keep your energy levels in check and optimize your daily routine. The smartwatch also offers personalized sleep coaching and nap detection, along with HRV status details (data presented is intended to be a close estimation of metrics tracked).|Switch Up Your Activities|With the Venu 3 smartwatch, you can easily switch up your activities. It comes with animated workouts and more than 30 built-in sports apps, including for active wheelchair users. The smartwatch also offers advanced training features to keep you motivated and help you stay strong.|Stay Connected On the Go|The Venu 3 smartwatch features a built-in speaker and microphone, allowing you to make and take calls right from your wrist when paired to your smartphone. You can even reply to texts using your phone’s voice assistant. Plus, enjoy connectivity features such as music storage, Garmin\u202fPay contactless payments (with a supported country and payment network), and more.|Enjoy complimentary Apple Service Trials with this purchase.|Redemption instructions will be emailed post purchase. Terms apply.|If the item details above aren’t accurate or complete, we want to know about it.Report incorrect product info', 'product_details': 'Discover the Venu 3 Smartwatch|Experience the ultimate on-wrist coach with the Venu 3 smartwatch. This GPS smartwatch is designed to support your goals, whatever they may be. It features a bright, colorful display and boasts up to 14 days of battery life. Purpose-built with advanced health and fitness features, the Venu 3 helps you better understand your body and track your progress towards your goals.|Monitor Your Energy Levels|The Venu 3 smartwatch comes with Body\u202fBattery energy monitoring, providing personalized insights based on sleep, naps, stress, workouts, and more. This feature helps you keep your energy levels in check and optimize your daily routine. The smartwatch also offers personalized sleep coaching and nap detection, along with HRV status details (data presented is intended to be a close estimation of metrics tracked).|Switch Up Your Activities|With the Venu 3 smartwatch, you can easily switch up your activities. It comes with animated workouts and more than 30 built-in sports apps, including for active wheelchair users. The smartwatch also offers advanced training features to keep you motivated and help you stay strong.|Stay Connected On the Go|The Venu 3 smartwatch features a built-in speaker and microphone, allowing you to make and take calls right from your wrist when paired to your smartphone. You can even reply to texts using your phone’s voice assistant. Plus, enjoy connectivity features such as music storage, Garmin\u202fPay contactless payments (with a supported country and payment network), and more.|Enjoy complimentary Apple Service Trials with this purchase.|Redemption instructions will be emailed post purchase. Terms apply.|If the item details above aren’t accurate or complete, we want to know about it.Report incorrect product info', "url": 'https://www.samsclub.com/p/garmin-venu-3-black-slate/P990395100?xid=plp_product_21'},
-    {'product_name': 'Garmin Venu 3S, French Gray', 'manufacturer': 'By Garmin', 'highlights': 'Highlights|Delivers up to 10 days in smartwatch mode, and up to 21 hours in GPS mode|Offers animated workouts for strength, cardio, HIIT, yoga, pilates, and the ability to create your own workouts|Provides an overview of your sleep, recovery, daily calendar, HRV status and more upon waking|Tracks all your movements with more than 30 preloaded GPS and indoor sports apps|Offers the convenience of making and taking phone calls from your wrist|Read more', 'about_item': "Discover the Venu 3 Smartwatch|Experience the ultimate on-wrist coach with the Venu 3 smartwatch. Designed to support your unique goals, this GPS smartwatch features a bright, colorful display and boasts up to 14 days of battery life. It's purpose-built with advanced health and fitness features to help you gain a better understanding of your body.|Monitor Your Energy Levels|The Venu 3 smartwatch comes with Body\u202fBattery energy monitoring, providing personalized insights based on sleep, naps, stress, workouts, and more. This feature helps you keep your energy levels in check, ensuring you're always ready to tackle the day.|Improve Your Sleep Quality|With personalized sleep coaching and nap detection, the Venu 3 smartwatch helps you improve the quality of your sleep. It provides detailed insights such as HRV status, giving you a close estimation of the metrics tracked.|Switch Up Your Activities|During the day, switch up your activities with animated workouts and more than 30 built-in sports apps. The Venu 3 smartwatch even includes apps for active wheelchair users and advanced training features to keep you going strong.|Stay Connected On the Go|With its built-in speaker and microphone, the Venu 3 smartwatch allows you to make and take calls right from your wrist when paired to your smartphone. You can even reply to texts using your phone’s voice assistant. Enjoy additional connectivity features such as music storage, Garmin\u202fPay contactless payments (with a supported country and payment network), and more.|Enjoy complimentary Apple Service Trials with this purchase.|Redemption instructions will be emailed post purchase. Terms apply.|If the item details above aren’t accurate or complete, we want to know about it.Report incorrect product info", 'product_details': "Discover the Venu 3 Smartwatch|Experience the ultimate on-wrist coach with the Venu 3 smartwatch. Designed to support your unique goals, this GPS smartwatch features a bright, colorful display and boasts up to 14 days of battery life. It's purpose-built with advanced health and fitness features to help you gain a better understanding of your body.|Monitor Your Energy Levels|The Venu 3 smartwatch comes with Body\u202fBattery energy monitoring, providing personalized insights based on sleep, naps, stress, workouts, and more. This feature helps you keep your energy levels in check, ensuring you're always ready to tackle the day.|Improve Your Sleep Quality|With personalized sleep coaching and nap detection, the Venu 3 smartwatch helps you improve the quality of your sleep. It provides detailed insights such as HRV status, giving you a close estimation of the metrics tracked.|Switch Up Your Activities|During the day, switch up your activities with animated workouts and more than 30 built-in sports apps. The Venu 3 smartwatch even includes apps for active wheelchair users and advanced training features to keep you going strong.|Stay Connected On the Go|With its built-in speaker and microphone, the Venu 3 smartwatch allows you to make and take calls right from your wrist when paired to your smartphone. You can even reply to texts using your phone’s voice assistant. Enjoy additional connectivity features such as music storage, Garmin\u202fPay contactless payments (with a supported country and payment network), and more.|Enjoy complimentary Apple Service Trials with this purchase.|Redemption instructions will be emailed post purchase. Terms apply.|If the item details above aren’t accurate or complete, we want to know about it.Report incorrect product info", "url": 'https://www.samsclub.com/p/garmin-venu-3s/P990395102?xid=plp_product_20'},
-]
+from src.analysis import IoTClassification, EntityAnalysis, RelationshipAnalysis
 
-from src.analysis import IoTClassification, EntityAnalysis
+HTML_DUMPS_DIR = "data/html_dumps"
+OUTPUT_DIR = "data/triplets"
+
+
+def load_products(path):
+    """Load the product records from a single JSONL dump file."""
+    products = []
+    with open(path, "r", encoding="utf-8") as f:
+        for line_number, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                products.append(json.loads(line))
+            except json.JSONDecodeError as e:
+                print(f"Skipping malformed line {line_number} in {path}: {e}")
+    return products
 
 
 def main():
-    print("Inside of index")
+    dump_files = glob.glob(os.path.join(HTML_DUMPS_DIR, "**", "*.jsonl"), recursive=True)
+    print(f"Found {len(dump_files)} dump files in {HTML_DUMPS_DIR}")
 
-    # 1 Scrape content, we are using the products above as a place holder
+    iot_classification = IoTClassification()
+    entity_analysis = EntityAnalysis()
+    relationship_analysis = RelationshipAnalysis()
 
-    # 2 Determine if the scraped content is relevant to our task
-    iotClassification = IoTClassification()
-    entityAnalysis = EntityAnalysis()
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    output_path = f"{OUTPUT_DIR}/{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.jsonl"
 
-    for product in products:
-        print("Product Name: ", product['product_name'])
-        result = iotClassification.classify(product["product_name"])
-        
-        print("Classification: ", result)
+    written = 0
 
-        # 3 If it is marked as Iot, analyze it
-        if result == "IOT":
-            entities = entityAnalysis.analyze(product)
-            print(entities)
+    with open(output_path, "w", encoding="utf-8") as out:
+        for dump_file in dump_files[:1]:
+            print(f"Processing {dump_file}")
 
-    # 4 draw relationshiops from the entities extracted
+            for product in load_products(dump_file):
+                title = product.get("title", "").strip()
+                if not title:
+                    continue
+
+                print("Product Name: ", title)
+
+                try:
+                    classification = iot_classification.classify(title)
+                    print("Classification: ", classification)
+                    if classification.strip() != "IOT":
+                        continue
+
+                    # Keep the prompt focused on the descriptive fields; the raw
+                    # Amazon URLs are thousands of characters of tracking tokens.
+                    entities = entity_analysis.analyze({
+                        "product_name": title,
+                        "about_item": product.get("features", ""),
+                    })
+                    print("Entities: ", entities)
+                    if not entities or not entities.get("entities"):
+                        continue
+
+                    relationships = relationship_analysis.analyze(entities)
+                    print("Relationships: ", relationships)
+                    if not relationships or not relationships.get("triples"):
+                        continue
+                except Exception as e:
+                    print(f"Analysis failed for '{title}': {e}")
+                    continue
+
+                for triple in relationships["triples"]:
+                    # The model does not always respect the schema, so treat
+                    # each triple as untrusted and skip malformed ones.
+                    try:
+                        record = {
+                            "triple": [
+                                [triple["subject"]["type"], triple["subject"]["value"]],
+                                triple["predicate"],
+                                [triple["object"]["type"], triple["object"]["value"]],
+                            ],
+                            "metadata": product,
+                        }
+                    except (KeyError, TypeError) as e:
+                        print(f"Skipping malformed triple {triple}: {e}")
+                        continue
+                    out.write(json.dumps(record, ensure_ascii=False) + "\n")
+                    written += 1
+
+    print(f"Wrote {written} triples to {output_path}")
 
 
-    
-
-if __name__ =="__main__":
+if __name__ == "__main__":
     main()

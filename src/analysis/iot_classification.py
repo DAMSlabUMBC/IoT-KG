@@ -3,7 +3,7 @@ from langchain_core.prompts import PromptTemplate
 
 class IoTClassification:
     def __init__(self):
-        self.llm = ChatOllama(model="gemma3:4b")
+        self.llm = ChatOllama(model="gemma3:27b")
         self.prompt = PromptTemplate.from_template(
             """
                 You are an expert in identifying Internet of Things (IoT) products.
