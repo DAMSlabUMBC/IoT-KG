@@ -19,9 +19,9 @@ services:
 
   openwebui:
     image: ghcr.io/open-webui/open-webui:main
-    container_name: open-webui
+    container_name: open-webui-IoTKG
     ports:
-      - "3000:8080"
+      - "4000:8080"
     environment:
       - OPENAI_API_KEY=none
   
